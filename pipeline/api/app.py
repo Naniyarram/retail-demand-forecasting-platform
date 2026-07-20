@@ -6,7 +6,6 @@ FastAPI application for serving champion forecasts.
 Run locally:
     uvicorn pipeline.api.app:app --host 0.0.0.0 --port 8000
 
-Author: Nani
 """
 
 from contextlib import asynccontextmanager
@@ -27,15 +26,21 @@ from pipeline.api.schemas import (
     RiskClassifyResponse,
     LLMRecommendationRequest,
     LLMRecommendationResponse,
+    RetailChatRequest,
+    RetailChatResponse,
     MetricsResponse
 )
 from pipeline.inventory.optimization import optimize_inventory
 from pipeline.inventory.risk import classify_risk
+from pipeline.utils.conversational_assistant import ConversationalRetailAssistant
 from pipeline.utils.llm_client import HFLLMClient
 
 
 forecast_service = ForecastService()
 llm_client = HFLLMClient()
+chat_assistant = ConversationalRetailAssistant(
+    llm_client=llm_client
+)
 
 # System Metrics
 system_metrics = {
@@ -47,6 +52,7 @@ system_metrics = {
         "/inventory/optimize": 0,
         "/inventory/risk": 0,
         "/decision/recommendations": 0,
+        "/decision/chat": 0,
         "/monitoring/metrics": 0
     }
 }
@@ -73,7 +79,7 @@ async def lifespan(app: FastAPI):
         # numpy compatibility errors between environments, etc.
         print(
             f"[WARNING] Champion model could not be pre-loaded: {exc}. "
-            "The API will start without a cached model. "
+              "The API will start without a cached model. "
             "Run /model or /forecast to trigger lazy loading, "
             "or regenerate the artifact with: python run_experiments.py"
         )
@@ -248,6 +254,36 @@ def generate_recommendations(
     return LLMRecommendationResponse(**results)
 
 
+@app.post(
+    "/decision/chat",
+    response_model=RetailChatResponse
+)
+def chat_with_retail_assistant(
+    request: RetailChatRequest
+) -> RetailChatResponse:
+    """
+    Answer conversational business questions using forecast and inventory context.
+    """
+    track_metric("/decision/chat")
+    history = [
+        message.model_dump()
+        for message in request.conversation_history
+    ]
+    try:
+        result = chat_assistant.answer_question(
+            question=request.question,
+            business_context=request.business_context,
+            conversation_history=history
+        )
+    except ValueError as exc:
+        raise HTTPException(
+            status_code=400,
+            detail=str(exc)
+        ) from exc
+
+    return RetailChatResponse(**result)
+
+
 @app.get(
     "/monitoring/metrics",
     response_model=MetricsResponse
@@ -267,4 +303,3 @@ def get_metrics() -> MetricsResponse:
             else None
         )
     )
-

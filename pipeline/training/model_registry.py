@@ -11,7 +11,7 @@ Responsibilities
 - List Versions
 - Rollback Champion Alias
 
-Author: Nani
+
 """
 
 from typing import List

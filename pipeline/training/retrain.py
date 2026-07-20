@@ -3,7 +3,6 @@ retrain.py
 
 Automated retraining pipeline based on data drift checks.
 
-Author: Nani
 """
 
 from typing import Dict, Any, List

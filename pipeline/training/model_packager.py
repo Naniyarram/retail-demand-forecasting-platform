@@ -9,7 +9,7 @@ Responsibilities
 - Store model artifacts
 - Return artifact paths
 
-Author: Nani
+
 """
 
 from pathlib import Path

@@ -13,7 +13,6 @@ Future:
 - Model Registry
 - Champion Promotion
 
-Author: Nani
 """
 
 from pathlib import Path

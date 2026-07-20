@@ -3,7 +3,7 @@ helpers.py
 
 Small shared utilities used across pipeline layers.
 
-Author: Nani
+
 """
 
 import json

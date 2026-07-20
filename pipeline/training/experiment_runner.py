@@ -14,7 +14,6 @@ Future:
 - Model Registry
 - CI/CD
 
-Author: Nani
 """
 from pipeline.training.mlflow_manager import (
     MLflowManager

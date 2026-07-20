@@ -1,66 +1,59 @@
-# =========================
+
 # Python
-# =========================
 __pycache__/
 *.py[cod]
 *$py.class
 
-# =========================
+# Streamlit secrets — never commit the real token file
+.streamlit/secrets.toml
+
+
 # Virtual Environments
-# =========================
 venv/
 .env
 .env/
 .venv/
 
-# =========================
+
 # Pytest
-# =========================
 .pytest_cache/
 pytest-cache-files-*/
 
-# =========================
+
 # Jupyter
-# =========================
 .ipynb_checkpoints/
 
-# =========================
-# MLflow
-# =========================
+# MLflow — local tracking DB and run files are large and environment-specific
 mlruns/
 mlflow.db
 mlflow.db-journal
 
-# =========================
-# Project Artifacts
-# =========================
-artifacts/
 
-# =========================
+# Artifacts — exclude bulk test artifacts and reports, but commit champion model
+artifacts/reports/
+artifacts/mlflow_runs/
+artifacts/demo_slides/
+artifacts/test_models/
+
+# NOTE: artifacts/models/ and artifacts/leaderboards/ are intentionally NOT
+# excluded here — they are committed so Streamlit Cloud can load the champion
+# model pkl and leaderboard CSV without running training.
+
+
 # Logs
-# =========================
 *.log
 
-# =========================
+
 # IDE
-# =========================
 .vscode/
 .idea/
 
-# =========================
 # OS
-# =========================
 .DS_Store
 Thumbs.db
 
-# =========================
-# Model Files
-# =========================
-*.pkl
-*.joblib
 
-# =========================
 # Temporary Files
-# =========================
 temp/
 tmp/
+outputs/

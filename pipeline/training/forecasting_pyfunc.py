@@ -11,7 +11,6 @@ Responsibilities
 - Enable MLflow model logging
 - Support Model Registry
 
-Author: Nani
 """
 
 from typing import Any

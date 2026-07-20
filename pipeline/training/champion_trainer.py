@@ -3,7 +3,6 @@ champion_trainer.py
 
 Champion model retraining.
 
-Author: Nani
 """
 
 from typing import Dict, Any

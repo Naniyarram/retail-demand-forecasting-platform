@@ -10,7 +10,7 @@ Supports:
 - MLflow Integration
 - Model Persistence
 
-Author: Nani
+
 """
 
 from pathlib import Path

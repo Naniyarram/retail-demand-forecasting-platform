@@ -10,7 +10,6 @@ Responsibilities
 - Support retraining workflows
 - Support deployment workflows
 
-Author: Nani
 """
 
 from pipeline.forecasting.sarima import (

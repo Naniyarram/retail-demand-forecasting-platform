@@ -4,7 +4,7 @@ forecast_service.py
 Application service for loading the champion model artifact
 and generating forecasts.
 
-Author: Nani
+
 """
 
 from pathlib import Path

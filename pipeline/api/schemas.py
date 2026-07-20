@@ -3,7 +3,6 @@ schemas.py
 
 Request and response contracts for the forecasting API.
 
-Author: Nani
 """
 
 from typing import Any
@@ -150,6 +149,35 @@ class LLMRecommendationResponse(BaseModel):
     model_used: str
 
 
+class ChatMessage(BaseModel):
+    role: str
+    content: str
+
+
+class RetailChatRequest(BaseModel):
+    question: str = Field(
+        min_length=1,
+        max_length=500
+    )
+    business_context: dict[str, Any]
+    conversation_history: list[ChatMessage] = Field(
+        default_factory=list
+    )
+
+
+class RetailChatResponse(BaseModel):
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )
+    answer: str
+    verified: bool
+    model_used: str
+    detected_intent: str
+    referenced_entity: str
+    analysis: dict[str, Any]
+    conversation_history: list[ChatMessage]
+
+
 class MetricsResponse(BaseModel):
     model_config = ConfigDict(
         protected_namespaces=()
@@ -158,4 +186,3 @@ class MetricsResponse(BaseModel):
     requests_by_endpoint: dict[str, int]
     model_loaded: bool
     active_model_name: str | None
-

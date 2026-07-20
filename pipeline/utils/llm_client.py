@@ -8,7 +8,6 @@ then falls back to the classic text-generation inference endpoint.
 If the network, token, or model is unavailable, it returns a clear
 rule-based backup report instead of crashing the app.
 
-Author: Nani
 """
 
 import os
@@ -23,6 +22,18 @@ def _load_dotenv() -> None:
     if os.getenv("HF_API_TOKEN") or os.getenv("HUGGINGFACEHUB_API_TOKEN"):
         return
 
+    # Try Streamlit Cloud secrets first (works when running on Streamlit Cloud)
+    try:
+        import streamlit as st
+        token = st.secrets.get("HF_API_TOKEN") or st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
+        if token:
+            os.environ["HF_API_TOKEN"] = token
+            return
+    except Exception:
+        # Not running inside Streamlit, or secrets not configured — that's fine
+        pass
+
+    # Fall back to a local .env file for local development
     env_path = Path(__file__).resolve().parents[2] / ".env"
     if not env_path.is_file():
         return
@@ -39,6 +50,7 @@ def _load_dotenv() -> None:
 
 
 _load_dotenv()
+
 
 
 class HFLLMClient:
@@ -222,6 +234,72 @@ class HFLLMClient:
                 ""
             )
         ).strip()
+
+    def generate_text(
+        self,
+        prompt: str,
+        system_prompt: str,
+        max_tokens: int = 450,
+        temperature: float = 0.35
+    ) -> str:
+        """
+        Generate a general business answer using the configured HF model.
+
+        This method is used by the conversational assistant. It keeps the
+        same authentication, endpoint, and model routing behavior as the
+        recommendation report generator.
+        """
+
+        last_error = None
+
+        for model_name in self._model_candidates():
+
+            payload = {
+                "model": model_name,
+                "messages": [
+                    {
+                        "role": "system",
+                        "content": system_prompt,
+                    },
+                    {
+                        "role": "user",
+                        "content": prompt,
+                    },
+                ],
+                "max_tokens": max_tokens,
+                "temperature": temperature,
+                "top_p": 0.9,
+            }
+
+            response = requests.post(
+                self.ROUTER_URL,
+                headers=self.headers,
+                json=payload,
+                timeout=60
+            )
+
+            if response.status_code != 200:
+                last_error = (
+                    f"HF router returned {response.status_code}: "
+                    f"{response.text[:300]}"
+                )
+                continue
+
+            result = response.json()
+            choices = result.get("choices", []) if isinstance(result, dict) else []
+            if not choices:
+                last_error = "HF router returned no choices."
+                continue
+
+            message = choices[0].get("message", {})
+            text = str(message.get("content", "")).strip()
+            if text:
+                self.model_name = model_name
+                return text
+
+            last_error = "HF router returned empty content."
+
+        raise RuntimeError(last_error or "HF text generation unavailable.")
 
     def _build_prompt(
         self,

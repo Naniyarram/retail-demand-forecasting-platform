@@ -10,9 +10,11 @@ RUN apt-get update \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt .
+COPY requirements-api.txt .
 
 RUN pip install --no-cache-dir --upgrade pip \
-    && pip install --no-cache-dir -r requirements.txt
+    && pip install --no-cache-dir -r requirements-api.txt
+
 
 # Copy source code only (data is volume-mounted at runtime)
 COPY pipeline ./pipeline

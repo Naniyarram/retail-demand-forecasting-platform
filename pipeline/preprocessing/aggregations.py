@@ -8,8 +8,6 @@ Supports:
 1. Enterprise Forecasting
 2. Store Forecasting
 3. Store + Department Forecasting
-
-Author: Nani
 """
 
 from typing import Optional

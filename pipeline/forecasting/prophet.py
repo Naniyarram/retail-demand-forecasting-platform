@@ -9,7 +9,7 @@ Supports:
 - MLflow integration
 - Model persistence
 
-Author: Nani
+
 """
 
 from pathlib import Path

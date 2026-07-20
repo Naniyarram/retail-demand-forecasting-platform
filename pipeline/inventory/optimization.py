@@ -3,7 +3,7 @@ optimization.py
 
 Inventory optimization engine for safety stock, ROP, and EOQ calculations.
 
-Author: Nani
+
 """
 
 import math

@@ -21,6 +21,7 @@ Author: Nani
 
 import math
 import time
+import html
 from pathlib import Path
 
 import altair as alt
@@ -35,6 +36,7 @@ from pipeline.api.forecast_service import ForecastService
 from pipeline.inventory.optimization import optimize_inventory
 from pipeline.inventory.risk import classify_risk
 from pipeline.monitoring.drift_detector import DataDriftDetector
+from pipeline.utils.conversational_assistant import ConversationalRetailAssistant
 from pipeline.utils.llm_client import HFLLMClient
 
 # -------------------------------------------------------------------
@@ -75,38 +77,192 @@ html, body, [class*="css"] {
     font-family: 'Inter', sans-serif;
 }
 
-/* --- hero header --- */
+/* --- product story header --- */
 .hero-header {
-    background: linear-gradient(135deg, #1e1b4b 0%, #312e81 40%, #4338ca 100%);
-    padding: 2.2rem 2.6rem;
-    border-radius: 14px;
-    margin-bottom: 1.8rem;
-    box-shadow: 0 8px 32px rgba(99,102,241,.25);
+    background: linear-gradient(135deg, #101827 0%, #172033 55%, #203a63 100%);
+    border: 1px solid rgba(148,163,184,.22);
+    padding: 2.4rem 2.6rem 2rem 2.6rem;
+    border-radius: 10px;
+    margin-bottom: 1.25rem;
+    box-shadow: 0 18px 45px rgba(15,23,42,.28);
     position: relative;
     overflow: hidden;
 }
 .hero-header::before {
     content: '';
     position: absolute;
-    top: -30%;
-    right: -10%;
-    width: 260px;
-    height: 260px;
-    background: radial-gradient(circle, rgba(139,92,246,.25) 0%, transparent 70%);
-    border-radius: 50%;
+    top: 0;
+    right: 0;
+    width: 34%;
+    height: 100%;
+    background: linear-gradient(135deg, rgba(38,87,214,.22), rgba(8,127,91,.16));
+    clip-path: polygon(24% 0, 100% 0, 100% 100%, 0 100%);
 }
 .hero-header h1 {
     color: #f8fafc !important;
-    font-weight: 800;
-    font-size: 2rem;
+    font-weight: 780;
+    font-size: 2.5rem;
     margin: 0;
-    letter-spacing: -0.03em;
+    letter-spacing: 0;
+    max-width: 760px;
 }
 .hero-header p {
-    color: #c7d2fe !important;
-    margin-top: .4rem;
-    font-size: .95rem;
+    color: #cbd5e1 !important;
+    margin-top: .75rem;
+    font-size: 1.02rem;
     font-weight: 400;
+    max-width: 760px;
+    line-height: 1.55;
+}
+.hero-kicker {
+    color: #93c5fd;
+    font-size: .78rem;
+    font-weight: 760;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: .75rem;
+}
+.hero-metrics {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: .8rem;
+    margin-top: 1.55rem;
+    max-width: 930px;
+}
+.hero-metric {
+    border: 1px solid rgba(148,163,184,.22);
+    background: rgba(15,23,42,.48);
+    border-radius: 8px;
+    padding: .95rem 1rem;
+}
+.hero-metric strong {
+    display: block;
+    color: #f8fafc;
+    font-size: 1.45rem;
+    line-height: 1.1;
+    font-weight: 760;
+}
+.hero-metric span {
+    display: block;
+    color: #94a3b8;
+    margin-top: .35rem;
+    font-size: .75rem;
+    line-height: 1.32;
+    font-weight: 560;
+}
+.product-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+    margin-top: 1.2rem;
+}
+.product-chip {
+    border: 1px solid rgba(148,163,184,.28);
+    background: rgba(248,250,252,.06);
+    color: #dbeafe;
+    border-radius: 999px;
+    padding: .42rem .7rem;
+    font-size: .78rem;
+    font-weight: 640;
+}
+.architecture-strip {
+    background: #111827;
+    border: 1px solid rgba(148,163,184,.18);
+    border-radius: 10px;
+    padding: 1.15rem 1.25rem;
+    margin-bottom: 1.45rem;
+}
+.architecture-strip h3 {
+    margin: 0 0 .9rem 0;
+    color: #e5e7eb;
+    font-size: 1.02rem;
+    font-weight: 740;
+}
+.architecture-flow {
+    display: grid;
+    grid-template-columns: repeat(5, minmax(0, 1fr));
+    gap: .65rem;
+}
+.architecture-step {
+    border: 1px solid rgba(148,163,184,.18);
+    background: #172033;
+    border-radius: 8px;
+    padding: .8rem .75rem;
+    min-height: 84px;
+}
+.architecture-step .step-label {
+    color: #60a5fa;
+    font-size: .66rem;
+    font-weight: 760;
+    letter-spacing: .05em;
+    text-transform: uppercase;
+}
+.architecture-step strong {
+    display: block;
+    color: #f8fafc;
+    margin-top: .25rem;
+    font-size: .88rem;
+    line-height: 1.25;
+}
+.architecture-step span {
+    display: block;
+    color: #94a3b8;
+    margin-top: .28rem;
+    font-size: .72rem;
+    line-height: 1.28;
+}
+.summary-panel {
+    background: linear-gradient(135deg, rgba(15,23,42,.92), rgba(30,41,59,.92));
+    border: 1px solid rgba(148,163,184,.2);
+    border-radius: 10px;
+    padding: 1.55rem;
+    margin-top: 1.2rem;
+}
+.summary-panel h3 {
+    margin: 0 0 .35rem 0;
+    color: #f8fafc;
+    font-size: 1.3rem;
+}
+.summary-panel p {
+    color: #cbd5e1;
+    margin: 0 0 1rem 0;
+}
+.summary-grid {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: .8rem;
+}
+.summary-item {
+    border: 1px solid rgba(148,163,184,.16);
+    border-radius: 8px;
+    padding: .85rem;
+    color: #e5e7eb;
+    background: rgba(15,23,42,.45);
+    font-weight: 650;
+}
+.summary-item span {
+    display: block;
+    color: #94a3b8;
+    font-size: .75rem;
+    margin-top: .25rem;
+    font-weight: 540;
+}
+@media (max-width: 1100px) {
+    .hero-metrics,
+    .architecture-flow,
+    .summary-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+@media (max-width: 700px) {
+    .hero-metrics,
+    .architecture-flow,
+    .summary-grid {
+        grid-template-columns: 1fr;
+    }
+    .hero-header h1 {
+        font-size: 1.8rem;
+    }
 }
 
 /* --- metric tiles --- */
@@ -164,6 +320,44 @@ html, body, [class*="css"] {
     font-size: 1rem;
     font-weight: 700;
     margin: 0 0 .6rem 0;
+}
+.chat-panel {
+    background: #111827;
+    border: 1px solid rgba(148,163,184,.18);
+    border-radius: 10px;
+    padding: 1rem;
+    margin-top: 1rem;
+}
+.chat-panel h4 {
+    color: #e5e7eb !important;
+    font-size: .98rem;
+    margin: 0 0 .3rem 0;
+}
+.chat-note {
+    color: #94a3b8;
+    font-size: .78rem;
+    line-height: 1.45;
+    margin-bottom: .75rem;
+}
+.chat-row {
+    border: 1px solid rgba(148,163,184,.14);
+    border-radius: 8px;
+    padding: .7rem .8rem;
+    margin-bottom: .55rem;
+    background: rgba(15,23,42,.62);
+}
+.chat-role {
+    color: #93c5fd;
+    font-size: .7rem;
+    font-weight: 760;
+    text-transform: uppercase;
+    letter-spacing: .05em;
+    margin-bottom: .25rem;
+}
+.chat-text {
+    color: #dbeafe;
+    font-size: .84rem;
+    line-height: 1.5;
 }
 
 /* --- status badges --- */
@@ -290,6 +484,109 @@ def risk_badge(level_str):
     return f"<span class='badge {cls}'>{level_str}</span>"
 
 
+def render_retail_chat(forecast_context, llm_model_choice):
+    """
+    Render the full-width conversational analytics assistant.
+    """
+
+    st.markdown(
+        """
+        <div class='chat-panel'>
+            <h4>Conversational Retail Analytics Assistant</h4>
+            <div class='chat-note'>
+                Ask business questions about forecasted sales, inventory gaps,
+                what-if scenarios, stockout risk, and recommended actions.
+            </div>
+        </div>
+        """,
+        unsafe_allow_html=True,
+    )
+
+    q1, q2, q3, q4 = st.columns(4)
+    example_questions = [
+        "How will sales perform next month?",
+        "Which inventory action should we take?",
+        "What if demand increases by 20%?",
+        "Which category contributes the most revenue?",
+    ]
+    with q1:
+        if st.button(example_questions[0], use_container_width=True):
+            st.session_state.retail_chat_question = example_questions[0]
+    with q2:
+        if st.button(example_questions[1], use_container_width=True):
+            st.session_state.retail_chat_question = example_questions[1]
+    with q3:
+        if st.button(example_questions[2], use_container_width=True):
+            st.session_state.retail_chat_question = example_questions[2]
+    with q4:
+        if st.button(example_questions[3], use_container_width=True):
+            st.session_state.retail_chat_question = example_questions[3]
+
+    with st.form("retail_chat_form", clear_on_submit=True):
+        user_question = st.text_area(
+            "Ask a business question",
+            value=st.session_state.retail_chat_question,
+            placeholder=(
+                "Example: If Product A demand increases by 20%, current inventory is "
+                "1000 units, forecasted demand is 1400 units, and lead time is 7 days, "
+                "what action should we take?"
+            ),
+            height=90
+        )
+        ask_clicked = st.form_submit_button(
+            "Ask Assistant",
+            type="primary",
+            use_container_width=True
+        )
+
+    if ask_clicked and user_question.strip():
+        with st.spinner("Assistant is calculating business impact and generating an answer..."):
+            chat_client = HFLLMClient(model_name=llm_model_choice)
+            assistant = ConversationalRetailAssistant(
+                llm_client=chat_client
+            )
+            chat_result = assistant.answer_question(
+                question=user_question,
+                business_context=forecast_context,
+                conversation_history=st.session_state.retail_chat_history
+            )
+            st.session_state.retail_chat_history = chat_result["conversation_history"]
+            st.session_state.retail_chat_question = ""
+            st.session_state.last_chat_status = {
+                "verified": chat_result["verified"],
+                "model_used": chat_result["model_used"],
+                "intent": chat_result["detected_intent"],
+                "entity": chat_result["referenced_entity"],
+            }
+
+    if st.session_state.retail_chat_history:
+        chat_status = st.session_state.get("last_chat_status", {})
+        status_label = "Generated" if chat_status.get("verified") else "Validated fallback"
+        st.caption(
+            f"{status_label} response | "
+            f"Intent: {chat_status.get('intent', 'not available')} | "
+            f"Context: {chat_status.get('entity', 'active selection')} | "
+            f"Model: {chat_status.get('model_used', 'not available')}"
+        )
+        for message in st.session_state.retail_chat_history[-6:]:
+            role = "Business User" if message["role"] == "user" else "RetailCast Assistant"
+            safe_content = html.escape(message["content"]).replace("\n", "<br>")
+            st.markdown(
+                f"""
+                <div class='chat-row'>
+                    <div class='chat-role'>{role}</div>
+                    <div class='chat-text'>{safe_content}</div>
+                </div>
+                """,
+                unsafe_allow_html=True,
+            )
+
+        if st.button("Clear Assistant Conversation", use_container_width=True):
+            st.session_state.retail_chat_history = []
+            st.session_state.retail_chat_question = ""
+            st.session_state.last_chat_status = {}
+
+
 # ===================================================================
 #  LOAD CORE DATA
 # ===================================================================
@@ -303,8 +600,8 @@ api_status = check_api_health()
 # ===================================================================
 #  SIDEBAR
 # ===================================================================
-st.sidebar.markdown("## 📈 RetailCast")
-st.sidebar.caption("Demand Forecasting · MLOps Platform v2.0")
+st.sidebar.markdown("## RetailCast")
+st.sidebar.caption("Demand Forecasting | MLOps Platform v2.0")
 st.sidebar.markdown("<hr class='soft-divider'>", unsafe_allow_html=True)
 
 # --- backend health ---
@@ -359,13 +656,75 @@ llm_model_choice = st.sidebar.selectbox(
     ],
 )
 
+if "retail_chat_history" not in st.session_state:
+    st.session_state.retail_chat_history = []
+if "retail_chat_question" not in st.session_state:
+    st.session_state.retail_chat_question = ""
+if "latest_inventory_result" not in st.session_state:
+    st.session_state.latest_inventory_result = {}
+if "latest_risk_result" not in st.session_state:
+    st.session_state.latest_risk_result = {}
+
 # ===================================================================
 #  HERO HEADER
 # ===================================================================
 st.markdown("""
 <div class='hero-header'>
-    <h1>RetailCast — Demand Forecasting Platform</h1>
-    <p>End-to-end MLOps pipeline · Walk-forward validation · Champion model serving · LLM-powered insights</p>
+    <div class='hero-kicker'>Enterprise Retail Demand Forecasting Platform</div>
+    <h1>RetailCast: Demand Forecasting & Decision Intelligence</h1>
+    <p>
+        A production-style ML system that turns weekly retail sales history into forecasts,
+        inventory decisions, risk signals, and business recommendations.
+    </p>
+    <div class='hero-metrics'>
+        <div class='hero-metric'><strong>421K+</strong><span>Walmart weekly sales records processed</span></div>
+        <div class='hero-metric'><strong>3.95%</strong><span>MAPE from the SARIMA champion run</span></div>
+        <div class='hero-metric'><strong>45</strong><span>Stores represented in the dataset</span></div>
+        <div class='hero-metric'><strong>81</strong><span>Departments included in the demand history</span></div>
+    </div>
+    <div class='product-chips'>
+        <span class='product-chip'>SARIMA</span>
+        <span class='product-chip'>Prophet</span>
+        <span class='product-chip'>XGBoost</span>
+        <span class='product-chip'>Walk-Forward Validation</span>
+        <span class='product-chip'>MLflow</span>
+        <span class='product-chip'>FastAPI</span>
+        <span class='product-chip'>Inventory Optimization</span>
+        <span class='product-chip'>Llama 3.1</span>
+    </div>
+</div>
+""", unsafe_allow_html=True)
+
+st.markdown("""
+<div class='architecture-strip'>
+    <h3>System Architecture</h3>
+    <div class='architecture-flow'>
+        <div class='architecture-step'>
+            <div class='step-label'>Data</div>
+            <strong>Raw Retail Sales</strong>
+            <span>Stores, departments, weekly sales, external features</span>
+        </div>
+        <div class='architecture-step'>
+            <div class='step-label'>Modeling</div>
+            <strong>SARIMA / Prophet / XGBoost</strong>
+            <span>Feature engineering and walk-forward validation</span>
+        </div>
+        <div class='architecture-step'>
+            <div class='step-label'>Lifecycle</div>
+            <strong>Champion Selection</strong>
+            <span>Leaderboard, metadata, full-history retraining</span>
+        </div>
+        <div class='architecture-step'>
+            <div class='step-label'>Serving</div>
+            <strong>FastAPI Inference</strong>
+            <span>Forecast, inventory, risk, and monitoring endpoints</span>
+        </div>
+        <div class='architecture-step'>
+            <div class='step-label'>Decision</div>
+            <strong>Inventory + LLM Insights</strong>
+            <span>Operational recommendations for business users</span>
+        </div>
+    </div>
 </div>
 """, unsafe_allow_html=True)
 
@@ -373,11 +732,11 @@ st.markdown("""
 #  MAIN TABS
 # ===================================================================
 tab_overview, tab_forecast, tab_inventory, tab_drift, tab_system = st.tabs([
-    "📊 Data Explorer",
-    "🔮 Forecast & Insights",
-    "📦 Inventory Optimizer",
-    "🔬 Drift Monitor",
-    "⚙️ System Health",
+    "Data Explorer",
+    "Forecast & Insights",
+    "Inventory Optimizer",
+    "Drift Monitor",
+    "System Health",
 ])
 
 # ===================================================================
@@ -528,6 +887,11 @@ with tab_forecast:
                 "Champion model artifact not found.  "
                 "Please run `python run_experiments.py` to train and serialize the champion model first."
             )
+        except (ModuleNotFoundError, AttributeError) as exc:
+            st.error(
+                f"Champion model artifact is incompatible with this environment: {exc}. "
+                "Run `python run_experiments.py` to regenerate a clean artifact."
+            )
         except Exception as exc:
             st.error(f"Failed to load champion model: {exc}")
 
@@ -622,6 +986,34 @@ with tab_forecast:
             .interactive()
         )
         st.altair_chart(line_chart, use_container_width=True)
+
+        forecast_context = {
+            "store_id": store_id,
+            "department_id": dept_id if level == "Store & Department" else None,
+            "horizon": horizon,
+            "average_historical": float(avg_hist),
+            "average_forecast": float(avg_fc),
+            "total_forecast": float(total_fc),
+            "trend_direction": f"{trend_dir} of {pct_change:+.1f}%",
+            "change_pct": float(round(pct_change, 2)),
+            "forecast_values": [float(value) for value in predictions],
+            "inventory": st.session_state.latest_inventory_result,
+            "risk": st.session_state.latest_risk_result,
+            "current_inventory": st.session_state.latest_risk_result.get("metrics", {}).get("current_inventory"),
+            "items": [
+                {
+                    "name": f"Department {int(row['Dept'])}",
+                    "forecast_revenue": float(row["Weekly_Sales"]),
+                    "growth_pct": 0.0,
+                }
+                for _, row in agg.get_top_departments(train_data, top_n=10).head(10).iterrows()
+            ],
+        }
+
+        render_retail_chat(
+            forecast_context=forecast_context,
+            llm_model_choice=llm_model_choice
+        )
 
         # --- leaderboard + AI insights ---
         col_lb, col_ai = st.columns([2, 3])
@@ -763,6 +1155,7 @@ with tab_inventory:
                     holding_cost_unit_year=holding_cost,
                     setup_cost_order=setup_cost,
                 )
+                st.session_state.latest_inventory_result = opt_result
                 time.sleep(0.3)  # slight delay for polish
 
             # display optimization results
@@ -803,6 +1196,7 @@ with tab_inventory:
                 safety_stock=opt_result["safety_stock"],
                 total_forecasted_demand=total_fc,
             )
+            st.session_state.latest_risk_result = risk_result
 
             rc1, rc2 = st.columns(2)
             with rc1:
@@ -980,6 +1374,26 @@ with tab_system:
             ),
             unsafe_allow_html=True,
         )
+
+    st.write("")
+
+    st.markdown("""
+    <div class='summary-panel'>
+        <h3>RetailCast Final Summary</h3>
+        <p>
+            Enterprise retail forecasting platform built to connect model accuracy,
+            serving infrastructure, inventory decisions, and business recommendations.
+        </p>
+        <div class='summary-grid'>
+            <div class='summary-item'>421K+ Retail Records<span>45 stores and 81 departments</span></div>
+            <div class='summary-item'>Champion Forecasting<span>SARIMA, Prophet, and XGBoost comparison</span></div>
+            <div class='summary-item'>3.95% MAPE<span>Best SARIMA validation result</span></div>
+            <div class='summary-item'>FastAPI Serving<span>Forecast, inventory, risk, and metrics endpoints</span></div>
+            <div class='summary-item'>Inventory Decisions<span>Safety stock, reorder point, EOQ, risk analysis</span></div>
+            <div class='summary-item'>LLM Recommendations<span>Llama 3.1 business insight layer</span></div>
+        </div>
+    </div>
+    """, unsafe_allow_html=True)
 
     st.write("")
 

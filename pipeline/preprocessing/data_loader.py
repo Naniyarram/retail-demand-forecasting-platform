@@ -8,7 +8,7 @@ Used by:
 - experiment_runner.py
 - forecasting models
 
-Author: Nani
+
 """
 
 from pathlib import Path

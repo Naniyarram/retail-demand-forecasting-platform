@@ -7,8 +7,6 @@ Supports:
 - Company Forecasting
 - Store Forecasting
 - Store + Department Forecasting
-
-Author: Nani
 """
 
 from pipeline.training.champion_pipeline import (

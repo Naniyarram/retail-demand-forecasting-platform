@@ -3,7 +3,7 @@ drift_detector.py
 
 Statistical data drift monitoring using Kolmogorov-Smirnov tests.
 
-Author: Nani
+
 """
 
 from typing import Dict, Any, List

@@ -94,3 +94,60 @@ def test_monitoring_metrics_endpoint():
     assert data["total_requests"] >= 1
     assert "/health" in data["requests_by_endpoint"]
     assert data["requests_by_endpoint"]["/health"] >= 1
+
+
+@patch("pipeline.utils.llm_client.requests.post")
+def test_decision_chat_endpoint(mock_post):
+    mock_post.return_value.status_code = 200
+    mock_post.return_value.json.return_value = {
+        "choices": [{
+            "message": {
+                "content": (
+                    "Forecasted demand is increasing, with projected weekly sales "
+                    "of about 13,000 compared with the historical baseline. Inventory "
+                    "should be reviewed because higher demand can raise stockout risk. "
+                    "Recommended action is to increase safety stock before the demand window."
+                )
+            }
+        }]
+    }
+
+    payload = {
+        "question": "Should we increase inventory?",
+        "business_context": {
+            "store_id": 1,
+            "department_id": 1,
+            "horizon": 12,
+            "average_historical": 12000.0,
+            "average_forecast": 13000.0,
+            "total_forecast": 156000.0,
+            "trend_direction": "Increase of +8.3%",
+            "change_pct": 8.3,
+            "forecast_values": [12500.0, 13000.0, 13500.0],
+            "inventory": {
+                "safety_stock": 3500.0,
+                "reorder_point": 30000.0,
+                "economic_order_quantity": 15000.0
+            },
+            "risk": {
+                "stockout_risk": {
+                    "level": "Medium"
+                },
+                "overstock_risk": {
+                    "level": "Low"
+                }
+            }
+        },
+        "conversation_history": []
+    }
+
+    response = client.post("/decision/chat", json=payload)
+
+    assert response.status_code == 200
+    data = response.json()
+    assert data["verified"] is True
+    assert data["detected_intent"] == "inventory_action"
+    assert "analysis" in data
+    assert "kpis" in data["analysis"]
+    assert len(data["conversation_history"]) == 2
+    assert "inventory" in data["answer"].lower()

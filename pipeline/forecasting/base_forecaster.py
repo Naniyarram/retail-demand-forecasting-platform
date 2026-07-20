@@ -3,7 +3,7 @@ base_forecaster.py
 
 Abstract forecasting contract for all forecasting models.
 
-Author: Nani
+
 """
 
 from abc import ABC, abstractmethod 

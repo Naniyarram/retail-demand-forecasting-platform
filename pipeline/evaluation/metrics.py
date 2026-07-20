@@ -11,7 +11,7 @@ Used by:
 - MLflow Tracking
 - Model Monitoring
 
-Author: Nani
+
 """
 
 from typing import Dict

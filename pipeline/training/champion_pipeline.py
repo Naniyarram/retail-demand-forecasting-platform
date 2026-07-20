@@ -10,7 +10,7 @@ Responsibilities
 3. Model Logging
 4. Model URI Generation
 
-Author: Nani
+
 """
 
 from typing import Dict

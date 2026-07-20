@@ -9,7 +9,6 @@ Responsibilities
 - Log model metadata
 - Return model URI
 
-Author: Nani
 """
 
 from typing import Any

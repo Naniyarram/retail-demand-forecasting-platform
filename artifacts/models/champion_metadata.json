@@ -1,0 +1,12 @@
+{
+  "model_name": "Prophet",
+  "model_type": "ProphetForecaster",
+  "RMSE": 3676450.9270586236,
+  "MAE": 2612769.237916548,
+  "MAPE": 5.196972259404656,
+  "parameters": {
+    "model_type": "Prophet",
+    "yearly_seasonality": true,
+    "seasonality_mode": "multiplicative"
+  }
+}

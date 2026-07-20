@@ -9,7 +9,6 @@ Creates:
 - Rolling Statistics
 - Calendar Features
 
-Author: Nani
 """
 
 import pandas as pd
