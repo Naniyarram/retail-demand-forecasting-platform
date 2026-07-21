@@ -263,15 +263,6 @@ pytest
 
 ---
 
-## Resume Highlights
-
-- Built an end-to-end retail demand forecasting platform on 421K+ weekly sales records (45 stores), achieving **3.95% MAPE** with walk-forward validated SARIMA, Prophet, and XGBoost and automated champion selection.
-- Shipped a production-style MLOps pipeline: MLflow experiment tracking, model packaging, FastAPI inference serving, KS-test drift monitoring, Docker deployment, and GitHub Actions CI with **83 automated tests**.
-- Connected ML forecast outputs to supply chain decisions through Safety Stock, Reorder Point, EOQ computation, and stockout/overstock risk classification.
-- Integrated Hugging Face Llama 3.1 for structured business recommendations from forecast metrics, with output validation and deterministic fallback for reliability.
-
----
-
 ## Future Roadmap
 
 The following items are planned or partially scaffolded but not part of the current production flow:
@@ -285,13 +276,3 @@ The following items are planned or partially scaffolded but not part of the curr
 | Cloud deployment (Streamlit Community Cloud live demo) | Deployed |
 
 ---
-
-## Author
-
-**Nani**
-
----
-
-## License
-
-This project uses the [Walmart Store Sales Forecasting](https://www.kaggle.com/c/walmart-recruiting-store-sales-forecasting) dataset. Model code and pipeline implementation are provided for portfolio and educational purposes.
