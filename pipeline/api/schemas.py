@@ -186,3 +186,5 @@ class MetricsResponse(BaseModel):
     requests_by_endpoint: dict[str, int]
     model_loaded: bool
     active_model_name: str | None
+    latencies: dict[str, float] = Field(default_factory=dict)
+

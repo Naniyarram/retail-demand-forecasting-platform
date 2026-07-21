@@ -9,9 +9,10 @@ Run locally:
 """
 
 from contextlib import asynccontextmanager
+import time
 from typing import Dict, Any
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
 from pipeline.api.forecast_service import ForecastService
@@ -54,6 +55,16 @@ system_metrics = {
         "/decision/recommendations": 0,
         "/decision/chat": 0,
         "/monitoring/metrics": 0
+    },
+    "latencies": {
+        "/health": 0.0,
+        "/model": 0.0,
+        "/forecast": 0.0,
+        "/inventory/optimize": 0.0,
+        "/inventory/risk": 0.0,
+        "/decision/recommendations": 0.0,
+        "/decision/chat": 0.0,
+        "/monitoring/metrics": 0.0
     }
 }
 
@@ -99,6 +110,23 @@ app.add_middleware(
     allow_methods=["*"],
     allow_headers=["*"],
 )
+
+
+@app.middleware("http")
+async def add_process_time_header(request: Request, call_next):
+    """
+    Measure response latency of API endpoints in milliseconds.
+    """
+    start_time = time.time()
+    response = await call_next(request)
+    process_time = time.time() - start_time
+    
+    path = request.url.path
+    # Expose and record latency
+    if path in system_metrics["latencies"]:
+        system_metrics["latencies"][path] = round(process_time * 1000, 2)
+        
+    return response
 
 
 @app.get(
@@ -301,5 +329,6 @@ def get_metrics() -> MetricsResponse:
             forecast_service.get_model_name()
             if forecast_service.is_model_loaded()
             else None
-        )
+        ),
+        latencies=system_metrics["latencies"]
     )

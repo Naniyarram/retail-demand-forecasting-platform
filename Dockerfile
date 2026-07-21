@@ -16,11 +16,12 @@ RUN pip install --no-cache-dir --upgrade pip \
     && pip install --no-cache-dir -r requirements-api.txt
 
 
-# Copy source code only (data is volume-mounted at runtime)
+# Copy source code and pre-trained champion artifacts
 COPY pipeline ./pipeline
 COPY run_experiments.py .
+COPY artifacts ./artifacts
 
-# Create artifact directories
+# Ensure all output directories are created
 RUN mkdir -p artifacts/models artifacts/reports artifacts/leaderboards
 
 EXPOSE 8000

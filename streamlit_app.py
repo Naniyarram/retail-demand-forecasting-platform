@@ -22,9 +22,29 @@ Author: Nani
 import math
 import time
 import html
+import os
 from pathlib import Path
 
+# -------------------------------------------------------------------
+# Python 3.13 / 3.14 compatibility hotfix for Altair
+# Altair v5 schemas use closed=True on Python 3.13+, but the PEP 728
+# 'closed' TypedDict feature was deferred, causing TypeErrors in 3.13/3.14.
+# -------------------------------------------------------------------
+import sys
+import typing
+if sys.version_info >= (3, 13):
+    try:
+        orig_new = typing._TypedDictMeta.__new__
+        def _patched_typeddict_new(cls, *args, **kwargs):
+            kwargs.pop('closed', None)
+            kwargs.pop('extra_items', None)
+            return orig_new(cls, *args, **kwargs)
+        typing._TypedDictMeta.__new__ = _patched_typeddict_new
+    except Exception:
+        pass
+
 import altair as alt
+
 import numpy as np
 import pandas as pd
 import requests
@@ -52,7 +72,13 @@ st.set_page_config(
 # -------------------------------------------------------------------
 # Global constants
 # -------------------------------------------------------------------
-API_BASE = "http://127.0.0.1:8000"
+# Try to resolve backend API URL from environment variables or Streamlit secrets
+# Fallback to local 127.0.0.1 if not defined (ideal for local development/docker compose)
+API_BASE = (
+    os.getenv("RETAIL_API_BASE")
+    or (st.secrets.get("RETAIL_API_BASE") if "secrets" in dir(st) else None)
+    or "http://127.0.0.1:8000"
+)
 COLOR_PALETTE = {
     "primary":     "#6366f1",
     "secondary":   "#8b5cf6",
@@ -1404,11 +1430,12 @@ with tab_system:
             metrics_resp = requests.get(f"{API_BASE}/monitoring/metrics", timeout=3)
             if metrics_resp.status_code == 200:
                 metrics_data = metrics_resp.json()
-                em1, em2 = st.columns([1, 2])
+                em1, em2, em3 = st.columns([1.2, 2, 2.2])
                 with em1:
                     st.metric("Total API Requests", f"{metrics_data.get('total_requests', 0):,}")
-                    st.metric("Model Active", "Yes" if metrics_data.get("model_loaded") else "No")
+                    st.metric("Model Active", "Yes" if metrics_data.get('model_loaded') else "No")
                 with em2:
+                    st.markdown("<p style='font-size:0.85rem;font-weight:600;color:#94a3b8;'>ENDPOINT REQUESTS</p>", unsafe_allow_html=True)
                     ep_data = metrics_data.get("requests_by_endpoint", {})
                     if ep_data:
                         ep_df = pd.DataFrame(
@@ -1425,9 +1452,30 @@ with tab_system:
                                     alt.Tooltip("Requests:Q"),
                                 ],
                             )
-                            .properties(height=220)
+                            .properties(height=180)
                         )
                         st.altair_chart(ep_chart, use_container_width=True)
+                with em3:
+                    st.markdown("<p style='font-size:0.85rem;font-weight:600;color:#94a3b8;'>LATENCY PROFILE (ms)</p>", unsafe_allow_html=True)
+                    lat_data = metrics_data.get("latencies", {})
+                    if lat_data:
+                        lat_df = pd.DataFrame(
+                            [{"Endpoint": k, "Latency (ms)": v} for k, v in lat_data.items()]
+                        ).sort_values("Latency (ms)", ascending=False)
+                        lat_chart = (
+                            alt.Chart(lat_df)
+                            .mark_bar(cornerRadiusTopLeft=4, cornerRadiusTopRight=4, color="#f59e0b")
+                            .encode(
+                                x=alt.X("Latency (ms):Q", title="Latency (ms)"),
+                                y=alt.Y("Endpoint:N", sort="-x", title=""),
+                                tooltip=[
+                                    alt.Tooltip("Endpoint:N"),
+                                    alt.Tooltip("Latency (ms):Q", format=".2f"),
+                                ],
+                            )
+                            .properties(height=180)
+                        )
+                        st.altair_chart(lat_chart, use_container_width=True)
             else:
                 st.warning(f"Metrics endpoint returned status {metrics_resp.status_code}")
         except Exception as exc:
