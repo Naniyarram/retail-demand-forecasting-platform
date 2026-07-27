@@ -2,6 +2,8 @@
 
 End-to-end machine learning system for weekly retail demand forecasting, inventory decision support, and LLM-generated business recommendations. Built to demonstrate applied ML engineering, MLOps discipline, and production-oriented software design on real retail data at scale.
 
+Live demo: [Launch the deployed Streamlit app](https://retail-demand-forecasting-platform.streamlit.app/) to explore forecasts, inventory decisions, and business recommendations.
+
 | Dataset | Validation | Champion Model | Engineering |
 |---|---|---|---|
 | 421,570 weekly sales records | 5-fold walk-forward CV | SARIMA — 3.95% MAPE | FastAPI · MLflow · Docker · 83 tests |
