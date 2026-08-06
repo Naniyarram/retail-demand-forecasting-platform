@@ -1,18 +1,5 @@
 """
-mlflow_manager.py
-
-Centralized MLflow tracking layer.
-
-Responsibilities:
-- Experiment Tracking
-- Metric Logging
-- Parameter Logging
-- Artifact Logging
-
-Future:
-- Model Registry
-- Champion Promotion
-
+MLflow tracking client wrapper for experiment monitoring and artifact management.
 """
 
 from pathlib import Path
@@ -25,6 +12,9 @@ import pandas as pd
 
 
 class MLflowManager:
+    """
+    Manages experiment metadata, parameters, metrics, and leaderboards in MLflow.
+    """
 
     def __init__(
         self,

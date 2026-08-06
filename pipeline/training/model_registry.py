@@ -1,17 +1,5 @@
 """
-model_registry.py
-
-MLflow Model Registry Manager.
-
-Responsibilities
-----------------
-- Register Models
-- Assign Aliases
-- Retrieve Registered Models
-- List Versions
-- Rollback Champion Alias
-
-
+Manages model registration, aliasing, and promotion in the MLflow Model Registry.
 """
 
 from typing import List
@@ -24,7 +12,7 @@ from mlflow import MlflowClient
 
 class ModelRegistryManager:
     """
-    MLflow Registry Management.
+    API client wrapper for MLflow model registry tasks.
     """
 
     def __init__(self):
@@ -37,12 +25,7 @@ class ModelRegistryManager:
         registered_model_name: str
     ) -> int:
         """
-        Register model in MLflow Registry.
-
-        Returns
-        -------
-        int
-            Registered version number.
+        Registers a new model version in the MLflow Registry.
         """
 
         model_version = mlflow.register_model(
@@ -61,12 +44,7 @@ class ModelRegistryManager:
         alias: str
     ) -> None:
         """
-        Assign alias to model version.
-
-        Examples:
-        ----------
-        champion
-        challenger
+        Assigns a custom alias (e.g. 'champion' or 'challenger') to a specific model version.
         """
 
         self.client.set_registered_model_alias(
@@ -81,7 +59,7 @@ class ModelRegistryManager:
         alias: str = "champion"
     ):
         """
-        Retrieve model version by alias.
+        Retrieves model version info matching the specified alias.
         """
 
         return self.client.get_model_version_by_alias(
@@ -94,7 +72,7 @@ class ModelRegistryManager:
         model_name: str
     ) -> Optional[int]:
         """
-        Get current champion version.
+        Returns the version number currently tagged as the champion, or None if not set.
         """
 
         try:
@@ -118,7 +96,7 @@ class ModelRegistryManager:
         model_name: str
     ) -> List[Dict]:
         """
-        List all registered versions.
+        Queries and returns a list of all registered versions for a given model.
         """
 
         versions = (
@@ -142,8 +120,7 @@ class ModelRegistryManager:
         version: int
     ) -> None:
         """
-        Promote model version
-        to champion alias.
+        Updates the 'champion' alias to point to the specified model version.
         """
 
         self.set_alias(
@@ -158,8 +135,7 @@ class ModelRegistryManager:
         version: int
     ) -> None:
         """
-        Promote model version
-        to challenger alias.
+        Updates the 'challenger' alias to point to the specified model version.
         """
 
         self.set_alias(
@@ -174,7 +150,7 @@ class ModelRegistryManager:
         version: int
     ) -> None:
         """
-        Rollback champion alias.
+        Points the champion alias back to a previous model version.
         """
 
         self.set_alias(

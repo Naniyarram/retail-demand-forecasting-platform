@@ -1,14 +1,5 @@
 """
-model_logger.py
-
-Model artifact logging layer.
-
-Responsibilities
-----------------
-- Log champion model artifacts
-- Log model metadata
-- Return model URI
-
+Logs custom MLflow PyFunc model artifacts and summaries to MLflow runs.
 """
 
 from typing import Any
@@ -24,7 +15,7 @@ from pipeline.training.forecasting_pyfunc import (
 
 class ModelLogger:
     """
-    Handles MLflow model logging.
+    Logs forecasting models and metadata into an active MLflow run.
     """
 
     def __init__(self):
@@ -38,8 +29,7 @@ class ModelLogger:
         artifact_path: str = "champion_model"
     ) -> str:
         """
-        Log production model
-        as MLflow PyFunc model.
+        Wraps and logs the model object along with its metadata.
         """
 
         wrapped_model = (
@@ -82,7 +72,7 @@ class ModelLogger:
         champion_summary: Dict
     ) -> None:
         """
-        Log champion metadata.
+        Saves champion summary metrics and parameters to the run.
         """
 
         mlflow.log_dict(
@@ -95,7 +85,7 @@ class ModelLogger:
         artifact_path: str = "champion_model"
     ) -> str:
         """
-        Generate model URI.
+        Constructs the MLflow runs URI for the logged artifact path.
         """
 
         active_run = mlflow.active_run()

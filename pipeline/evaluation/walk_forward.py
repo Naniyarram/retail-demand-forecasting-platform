@@ -1,15 +1,5 @@
 """
-walk_forward.py
-
-Walk-forward validation for time series forecasting.
-
-Used by:
-- SARIMA
-- Prophet
-- XGBoost
-- Experiment Runner
-
-
+Walk-forward validation for time series forecasting models.
 """
 
 from typing import Generator
@@ -28,17 +18,7 @@ from pipeline.config.settings import (
 
 class WalkForwardValidator:
     """
-    Walk-forward validation for forecasting models.
-
-    Example:
-
-    Fold 1:
-        Train -> Past Data
-        Test  -> Future Window
-
-    Fold 2:
-        Train -> Expanded Past Data
-        Test  -> Next Future Window
+    Split time series data using rolling/expanding windows to prevent lookahead bias.
     """
 
     def __init__(
@@ -58,11 +38,7 @@ class WalkForwardValidator:
         None
     ]:
         """
-        Generate walk-forward train/test indices.
-
-        Returns
-        -------
-        train_idx, test_idx
+        Generates walk-forward training and test split indices.
         """
 
         if len(df) == 0:
@@ -84,12 +60,7 @@ class WalkForwardValidator:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Generate fold information.
-
-        Useful for:
-        - debugging
-        - experiment reports
-        - MLflow artifacts
+        Returns metadata for each validation split as a DataFrame.
         """
 
         folds = []

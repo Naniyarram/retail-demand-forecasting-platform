@@ -1,11 +1,8 @@
 """
-app.py
-
-FastAPI application for serving champion forecasts.
+FastAPI application serving champion forecasts.
 
 Run locally:
     uvicorn pipeline.api.app:app --host 0.0.0.0 --port 8000
-
 """
 
 from contextlib import asynccontextmanager
@@ -82,16 +79,15 @@ def track_metric(endpoint: str):
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """
-    Load the champion model when the API starts.
-    Model loading is best-effort: if the artifact is missing or
-    incompatible the server still starts and returns 503 on forecast calls.
+    Loads champion model at startup.
+    Fails gracefully if the artifact is missing or incompatible so that the 
+    server can still start (forecast requests will return 503).
     """
     try:
         forecast_service.load_model()
         print("[INFO] Champion model loaded successfully.")
     except Exception as exc:
-        # Covers FileNotFoundError, ModuleNotFoundError (stale pickle),
-        # numpy compatibility errors between environments, etc.
+        # Handles missing files, stale pickles, or numpy environment mismatches.
         print(
             f"[WARNING] Champion model could not be pre-loaded: {exc}. "
               "The API will start without a cached model. "
@@ -118,15 +114,13 @@ app.add_middleware(
 
 @app.middleware("http")
 async def add_process_time_header(request: Request, call_next):
-    """
-    Measure response latency of API endpoints in milliseconds.
-    """
+    """Measures endpoint latency in milliseconds."""
     start_time = time.time()
     response = await call_next(request)
     process_time = time.time() - start_time
     
     path = request.url.path
-    # Expose and record latency
+    # Record latency
     if path in system_metrics["latencies"]:
         system_metrics["latencies"][path] = round(process_time * 1000, 2)
         
@@ -138,10 +132,7 @@ async def add_process_time_header(request: Request, call_next):
     response_model=HealthResponse
 )
 def health_check() -> HealthResponse:
-    """
-    Liveness probe: returns instantly to show the container is alive.
-    Does not verify heavy dependencies like model load status.
-    """
+    """Liveness probe. Quick check if the container is running."""
     track_metric("/health")
     return HealthResponse(
         status="healthy",
@@ -157,10 +148,7 @@ def health_check() -> HealthResponse:
     response_model=ReadyResponse
 )
 def readiness_check() -> ReadyResponse:
-    """
-    Readiness probe: checks if the forecasting model has finished loading.
-    Returns HTTP 503 if the model is not ready.
-    """
+    """Readiness probe. Checks if the forecasting model is loaded and ready."""
     track_metric("/ready")
     is_loaded = forecast_service.is_model_loaded()
     if not is_loaded:
@@ -180,9 +168,7 @@ def readiness_check() -> ReadyResponse:
     response_model=ModelMetadataResponse
 )
 def model_metadata() -> ModelMetadataResponse:
-    """
-    Return served model metadata.
-    """
+    """Returns active model metadata."""
     track_metric("/model")
     if not forecast_service.is_model_loaded():
         try:
@@ -205,9 +191,7 @@ def model_metadata() -> ModelMetadataResponse:
 def forecast(
     request: ForecastRequest
 ) -> ForecastResponse:
-    """
-    Generate a demand forecast.
-    """
+    """Generates demand forecast predictions for the requested horizon."""
     track_metric("/forecast")
     try:
         predictions = forecast_service.forecast(
@@ -240,9 +224,7 @@ def forecast(
 def optimize_inventory_endpoint(
     request: InventoryOptimizeRequest
 ) -> InventoryOptimizeResponse:
-    """
-    Perform safety stock, ROP, and EOQ calculations.
-    """
+    """Calculates safety stock, reorder point (ROP), and economic order quantity (EOQ)."""
     track_metric("/inventory/optimize")
     try:
         results = optimize_inventory(
@@ -269,9 +251,7 @@ def optimize_inventory_endpoint(
 def classify_risk_endpoint(
     request: RiskClassifyRequest
 ) -> RiskClassifyResponse:
-    """
-    Classify stockout and overstock risk levels.
-    """
+    """Classifies risk level for stockouts and overstocks."""
     track_metric("/inventory/risk")
     results = classify_risk(
         current_inventory=request.current_inventory,
@@ -289,9 +269,7 @@ def classify_risk_endpoint(
 def generate_recommendations(
     request: LLMRecommendationRequest
 ) -> LLMRecommendationResponse:
-    """
-    Generate natural language retail insights and recommendations using Llama 3.1 8B.
-    """
+    """Generates natural language retail insights and recommendations using the LLM."""
     track_metric("/decision/recommendations")
     forecast_data = {
         "store_id": request.store_id,
@@ -315,9 +293,7 @@ def generate_recommendations(
 def chat_with_retail_assistant(
     request: RetailChatRequest
 ) -> RetailChatResponse:
-    """
-    Answer conversational business questions using forecast and inventory context.
-    """
+    """Handles chat queries using forecast and inventory business context."""
     track_metric("/decision/chat")
     history = [
         message.model_dump()
@@ -343,9 +319,7 @@ def chat_with_retail_assistant(
     response_model=MetricsResponse
 )
 def get_metrics() -> MetricsResponse:
-    """
-    Expose serving usage and model loading status metrics.
-    """
+    """Exposes usage metrics, status, and latencies for monitoring."""
     track_metric("/monitoring/metrics")
     return MetricsResponse(
         total_requests=system_metrics["total_requests"],

@@ -1,15 +1,5 @@
 """
-sarima.py
-
-Auto-SARIMA forecasting model.
-
-Supports:
-- Walk-forward validation
-- Experiment Runner
-- MLflow integration
-- Model persistence
-
-
+Auto-SARIMA forecasting model implementation.
 """
 
 from pathlib import Path
@@ -50,7 +40,7 @@ class SARIMAForecaster(BaseForecaster):
         train_df: pd.DataFrame
     ) -> None:
         """
-        Train Auto-SARIMA model.
+        Fit an Auto-SARIMA model using stepwise AIC selection.
         """
 
         if TARGET_COLUMN not in train_df.columns:
@@ -105,7 +95,7 @@ class SARIMAForecaster(BaseForecaster):
         horizon: int
     ):
         """
-        Forecast future periods.
+        Forecast future periods using the fitted SARIMA model.
         """
 
         if not self.is_trained:
@@ -124,7 +114,7 @@ class SARIMAForecaster(BaseForecaster):
         path: str
     ) -> None:
         """
-        Save trained model.
+        Save the fitted model using joblib.
         """
 
         if not self.is_trained:
@@ -147,7 +137,7 @@ class SARIMAForecaster(BaseForecaster):
         path: str
     ) -> None:
         """
-        Load saved model.
+        Load a saved model using joblib.
         """
 
         self.fitted_model = joblib.load(
@@ -162,12 +152,7 @@ class SARIMAForecaster(BaseForecaster):
         self
     ) -> Dict[str, Any]:
         """
-        Model metadata.
-
-        Useful for:
-        - MLflow
-        - Reporting
-        - Leaderboards
+        Retrieve seasonal parameters and identified order details.
         """
 
         if not self.is_trained:

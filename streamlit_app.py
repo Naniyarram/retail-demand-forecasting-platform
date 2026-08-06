@@ -1,22 +1,6 @@
 """
-streamlit_app.py
-
-Production dashboard for the Retail Demand Forecasting platform.
-Connects to the FastAPI backend when available and falls back to
-direct Python model loading when the API is offline.
-
-Features
---------
-- Historical sales exploration with store/department breakdowns
-- Champion model forecasting with interactive visualizations
-- MLflow experiment leaderboard from walk-forward validation
-- Inventory optimization (Safety Stock, ROP, EOQ)
-- Stockout and overstock risk classification
-- Data drift detection via Kolmogorov-Smirnov tests
-- AI Copilot panel powered by Hugging Face serverless inference
-- System health and endpoint monitoring
-
-Author: Nani
+RetailCast dashboard for demand forecasting and inventory optimization.
+Visualizes sales, runs forecasts via the API (or local fallback), and estimates risk.
 """
 
 import math
@@ -25,11 +9,7 @@ import html
 import os
 from pathlib import Path
 
-# -------------------------------------------------------------------
-# Python 3.13 / 3.14 compatibility hotfix for Altair
-# Altair v5 schemas use closed=True on Python 3.13+, but the PEP 728
-# 'closed' TypedDict feature was deferred, causing TypeErrors in 3.13/3.14.
-# -------------------------------------------------------------------
+# Altair compatibility patch for Python 3.13+
 import sys
 import typing
 if sys.version_info >= (3, 13):
@@ -59,9 +39,7 @@ from pipeline.monitoring.drift_detector import DataDriftDetector
 from pipeline.utils.conversational_assistant import ConversationalRetailAssistant
 from pipeline.utils.llm_client import HFLLMClient
 
-# -------------------------------------------------------------------
-# Page setup
-# -------------------------------------------------------------------
+# Page configuration
 st.set_page_config(
     page_title="RetailCast | Demand Forecasting Platform",
     page_icon="📈",
@@ -69,11 +47,7 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# -------------------------------------------------------------------
-# Global constants
-# -------------------------------------------------------------------
-# Try to resolve backend API URL from environment variables or Streamlit secrets
-# Fallback to local 127.0.0.1 if not defined (ideal for local development/docker compose)
+# Resolve API URL from env or secrets, falling back to localhost
 API_BASE = (
     os.getenv("RETAIL_API_BASE")
     or (st.secrets.get("RETAIL_API_BASE") if "secrets" in dir(st) else None)
@@ -92,9 +66,7 @@ COLOR_PALETTE = {
     "text_muted":  "#94a3b8",
 }
 
-# -------------------------------------------------------------------
-# Custom CSS — injected once per session
-# -------------------------------------------------------------------
+# Custom styling
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
@@ -409,9 +381,7 @@ button[data-baseweb="tab"] {
 """, unsafe_allow_html=True)
 
 
-# ===================================================================
-#  DATA LAYER — cached loaders
-# ===================================================================
+# Cached data loaders
 @st.cache_data(show_spinner=False)
 def load_train_data():
     loader = WalmartDataLoader()
@@ -453,11 +423,9 @@ def load_champion_metadata():
         return json.load(f)
 
 
-# ===================================================================
-#  UTILITY HELPERS
-# ===================================================================
+# Helper functions
 def check_api_health():
-    """Ping the FastAPI backend and return status dict."""
+    """Check backend status."""
     try:
         resp = requests.get(f"{API_BASE}/health", timeout=2)
         if resp.status_code == 200:
@@ -467,7 +435,7 @@ def check_api_health():
                 ready_resp = requests.get(f"{API_BASE}/ready", timeout=2)
                 if ready_resp.status_code == 200:
                     model_loaded = True
-                    # Query metadata endpoint to fetch the loaded model name
+                    # Query metadata to get loaded model name
                     model_resp = requests.get(f"{API_BASE}/model", timeout=2)
                     if model_resp.status_code == 200:
                         model_name = model_resp.json().get("model_name", "Unknown")
@@ -485,7 +453,7 @@ def check_api_health():
 
 
 def aggregate_series(train_df, level, store_id, dept_id):
-    """Return (series_df, label) for the selected aggregation level."""
+    """Aggregate historical sales data by selected level."""
     agg = WalmartAggregator()
     if level == "Enterprise (Company)":
         series = agg.get_company_sales(train_df)
@@ -523,9 +491,7 @@ def risk_badge(level_str):
 
 
 def render_retail_chat(forecast_context, llm_model_choice):
-    """
-    Render the full-width conversational analytics assistant.
-    """
+    """Render the AI analytics assistant chat interface."""
 
     st.markdown(
         """
@@ -625,9 +591,7 @@ def render_retail_chat(forecast_context, llm_model_choice):
             st.session_state.last_chat_status = {}
 
 
-# ===================================================================
-#  LOAD CORE DATA
-# ===================================================================
+# Load core datasets
 with st.spinner("Loading Walmart datasets…"):
     train_data = load_train_data()
     features_data = load_features_data()
@@ -635,14 +599,12 @@ with st.spinner("Loading Walmart datasets…"):
 
 api_status = check_api_health()
 
-# ===================================================================
-#  SIDEBAR
-# ===================================================================
+# Sidebar setup
 st.sidebar.markdown("## RetailCast")
 st.sidebar.caption("Demand Forecasting | MLOps Platform v2.0")
 st.sidebar.markdown("<hr class='soft-divider'>", unsafe_allow_html=True)
 
-# --- backend health ---
+# Backend status
 if api_status["online"]:
     if api_status["model_loaded"]:
         st.sidebar.markdown(
@@ -665,7 +627,7 @@ else:
 
 st.sidebar.markdown("<hr class='soft-divider'>", unsafe_allow_html=True)
 
-# --- forecast controls ---
+# Forecast settings
 st.sidebar.subheader("Forecast Controls")
 level = st.sidebar.selectbox(
     "Aggregation Level",
@@ -683,7 +645,7 @@ horizon = st.sidebar.slider("Forecast Horizon (weeks)", 1, 52, 12)
 
 st.sidebar.markdown("<hr class='soft-divider'>", unsafe_allow_html=True)
 
-# --- llm model picker ---
+# Copilot options
 st.sidebar.subheader("AI Copilot")
 llm_model_choice = st.sidebar.selectbox(
     "LLM Backend",
@@ -703,9 +665,7 @@ if "latest_inventory_result" not in st.session_state:
 if "latest_risk_result" not in st.session_state:
     st.session_state.latest_risk_result = {}
 
-# ===================================================================
-#  HERO HEADER
-# ===================================================================
+# Header area
 st.markdown("""
 <div class='hero-header'>
     <div class='hero-kicker'>Enterprise Retail Demand Forecasting Platform</div>
@@ -766,9 +726,7 @@ st.markdown("""
 </div>
 """, unsafe_allow_html=True)
 
-# ===================================================================
-#  MAIN TABS
-# ===================================================================
+# Main dashboard tabs
 tab_overview, tab_forecast, tab_inventory, tab_drift, tab_system = st.tabs([
     "Data Explorer",
     "Forecast & Insights",
@@ -804,7 +762,7 @@ with tab_overview:
 
     st.write("")
 
-    # --- top stores & departments side by side ---
+    # Compare store and department revenue performance
     agg = WalmartAggregator()
     col_ts, col_td = st.columns(2)
 
@@ -844,7 +802,7 @@ with tab_overview:
         )
         st.altair_chart(bar_depts, use_container_width=True)
 
-    # --- company-level time series ---
+    # Company-level historical trend
     st.markdown("<div class='section-hdr'>Weekly Enterprise Sales Timeline</div>", unsafe_allow_html=True)
     company_ts = agg.get_company_sales(train_data)
     company_ts["Date"] = pd.to_datetime(company_ts["Date"])
@@ -875,14 +833,12 @@ with tab_overview:
     )
     st.altair_chart(area_chart, use_container_width=True)
 
-    # --- store info table ---
+    # Store dimensions
     with st.expander("📋 Store Metadata Table", expanded=False):
         st.dataframe(stores_data.style.format({"Size": "{:,}"}), use_container_width=True)
 
 
-# ===================================================================
-#  TAB 2 — FORECAST & INSIGHTS
-# ===================================================================
+# Tab 2: Forecast and Business Insights
 with tab_forecast:
     st.markdown("<div class='section-hdr'>Demand Forecast</div>", unsafe_allow_html=True)
 
@@ -893,7 +849,7 @@ with tab_forecast:
         st.error(f"No data found for the selected filters: {err}")
         st.stop()
 
-    # --- produce forecast ---
+    # Retrieve forecast from API or fallback locally
     predictions = []
     model_name = "Unknown"
     via_api = False
@@ -950,7 +906,7 @@ with tab_forecast:
         trend_arrow = "▲" if pct_change >= 0 else "▼"
         trend_color = COLOR_PALETTE["positive"] if pct_change >= 0 else COLOR_PALETTE["negative"]
 
-        # --- KPI Row ---
+        # KPI statistics summary
         k1, k2, k3, k4 = st.columns(4)
         with k1:
             st.markdown(
@@ -981,7 +937,7 @@ with tab_forecast:
 
         st.write("")
 
-        # --- combined line chart ---
+        # Forecast visualization
         st.markdown("<div class='section-hdr'>Historical vs Forecast — " + series_label + "</div>",
                     unsafe_allow_html=True)
 
@@ -991,7 +947,7 @@ with tab_forecast:
         plot_fc = forecast_df.copy()
         plot_fc["Type"] = "Forecast"
 
-        # bridge: connect lines
+        # Visual bridge connecting historical and forecasted data
         bridge = plot_hist.iloc[[-1]].copy()
         bridge["Type"] = "Forecast"
         plot_fc = pd.concat([bridge, plot_fc], ignore_index=True)
@@ -1053,7 +1009,7 @@ with tab_forecast:
             llm_model_choice=llm_model_choice
         )
 
-        # --- leaderboard + AI insights ---
+        # Model evaluation results & AI advisory side-by-side
         col_lb, col_ai = st.columns([2, 3])
 
         with col_lb:
@@ -1073,7 +1029,7 @@ with tab_forecast:
             else:
                 st.info("No leaderboard found. Run `python run_experiments.py` to generate one.")
 
-            # champion metadata
+            # Metadata for current champion model
             meta = load_champion_metadata()
             if meta:
                 st.markdown("##### Champion Hyperparameters")
@@ -1130,7 +1086,7 @@ with tab_forecast:
                     "Displaying rule-based analytical fallback report."
                 )
 
-    # --- forecast table (expandable) ---
+    # Exportable raw values
     if len(predictions) > 0:
         with st.expander("📋 Raw Forecast Table", expanded=False):
             display_fc = forecast_df.copy()
@@ -1143,9 +1099,7 @@ with tab_forecast:
             )
 
 
-# ===================================================================
-#  TAB 3 — INVENTORY OPTIMIZER
-# ===================================================================
+# Tab 3: Inventory Optimization
 with tab_inventory:
     st.markdown("<div class='section-hdr'>Inventory Optimization Engine</div>", unsafe_allow_html=True)
     st.caption(
@@ -1153,7 +1107,7 @@ with tab_inventory:
         "Then classify stockout and overstock risk levels."
     )
 
-    # check if predictions exist from previous tab
+    # Requires active forecast context
     if len(predictions) == 0:
         st.info("Switch to the **Forecast & Insights** tab first to generate a forecast before optimizing inventory.")
     else:
@@ -1226,7 +1180,7 @@ with tab_inventory:
 
             st.write("")
 
-            # --- risk classification ---
+            # Classify inventory risk profiles based on thresholds
             st.markdown("<div class='section-hdr'>Risk Assessment</div>", unsafe_allow_html=True)
             risk_result = classify_risk(
                 current_inventory=current_inventory,
@@ -1264,7 +1218,7 @@ with tab_inventory:
 
             st.write("")
 
-            # --- inventory metrics table ---
+            # Table view of calculated inventory parameters
             with st.expander("📋 Detailed Inventory Metrics", expanded=False):
                 inv_metrics = risk_result["metrics"]
                 metrics_df = pd.DataFrame(
@@ -1273,9 +1227,7 @@ with tab_inventory:
                 st.dataframe(metrics_df, use_container_width=True, hide_index=True)
 
 
-# ===================================================================
-#  TAB 4 — DRIFT MONITOR
-# ===================================================================
+# Tab 4: Data Drift Monitoring
 with tab_drift:
     st.markdown("<div class='section-hdr'>Data Drift Detection</div>", unsafe_allow_html=True)
     st.caption(
@@ -1333,7 +1285,7 @@ with tab_drift:
 
             st.write("")
 
-            # KS result details
+            # Test statistics per column
             for col_name, metrics in result["metrics"].items():
                 st.markdown(f"**Column: `{col_name}`**")
                 dm1, dm2, dm3 = st.columns(3)
@@ -1347,7 +1299,7 @@ with tab_drift:
                     else:
                         st.success("✔ No significant drift found.")
 
-            # Distribution comparison chart
+            # Overlaid distribution histograms
             st.markdown("<div class='section-hdr'>Distribution Comparison</div>", unsafe_allow_html=True)
 
             baseline_hist = baseline[["Weekly_Sales"]].copy()
@@ -1380,9 +1332,7 @@ with tab_drift:
             st.altair_chart(hist_chart, use_container_width=True)
 
 
-# ===================================================================
-#  TAB 5 — SYSTEM HEALTH
-# ===================================================================
+# Tab 5: System Status and Monitor
 with tab_system:
     st.markdown("<div class='section-hdr'>System Health & Monitoring</div>", unsafe_allow_html=True)
 
@@ -1435,7 +1385,7 @@ with tab_system:
 
     st.write("")
 
-    # Endpoint metrics if API is online
+    # Display endpoint metrics from the backend if online
     if api_status["online"]:
         st.markdown("<div class='section-hdr'>Endpoint Usage Metrics</div>", unsafe_allow_html=True)
         try:
@@ -1497,7 +1447,7 @@ with tab_system:
 
     st.write("")
 
-    # --- pipeline architecture overview ---
+    # Reference guide to system modules
     st.markdown("<div class='section-hdr'>Pipeline Architecture</div>", unsafe_allow_html=True)
 
     arch_col1, arch_col2 = st.columns(2)
@@ -1526,7 +1476,7 @@ with tab_system:
         - `HFLLMClient` — Generative business insights via HF API
         """)
 
-    # --- artifact file listing ---
+    # Files generated during pipelines
     st.markdown("<div class='section-hdr'>Artifact Registry</div>", unsafe_allow_html=True)
     artifact_root = Path("artifacts")
     if artifact_root.exists():

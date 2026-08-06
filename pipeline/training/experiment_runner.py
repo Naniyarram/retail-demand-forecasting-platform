@@ -1,19 +1,5 @@
 """
-experiment_runner.py
-
-Forecasting experimentation framework.
-
-Supports:
-- Walk Forward Validation
-- Multi Model Comparison
-- Leaderboard Generation
-- Champion Selection
-
-Future:
-- MLflow Tracking
-- Model Registry
-- CI/CD
-
+Orchestrates model validation, comparison, and selection.
 """
 from pipeline.training.mlflow_manager import (
     MLflowManager
@@ -37,7 +23,7 @@ from pipeline.evaluation.walk_forward import (
 
 class ExperimentRunner:
     """
-    Multi-model experimentation framework.
+    Evaluates multiple forecasting models using walk-forward validation.
     """
 
     def __init__(
@@ -70,8 +56,7 @@ class ExperimentRunner:
         data: pd.DataFrame
     ) -> Dict[str, Any]:
         """
-        Run walk-forward validation
-        for a single model.
+        Runs walk-forward cross-validation for a specific model across all folds.
         """
 
         model_name = model.get_model_name()
@@ -172,7 +157,7 @@ class ExperimentRunner:
         data: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Run all models.
+        Runs validation for all configured models, builds a leaderboard, and tracks runs if MLflow is configured.
         """
 
         self.results = []
@@ -248,7 +233,7 @@ class ExperimentRunner:
 
                 return leaderboard
 
-        # fallback when MLflow disabled
+        # Run validation locally without logging to MLflow.
 
         for model in self.models:
 
@@ -319,7 +304,7 @@ class ExperimentRunner:
         self
     ) -> Dict[str, Any]:
         """
-        Return best model.
+        Identifies the champion model based on the primary optimization metric.
         """
 
         if not self.results:
@@ -340,7 +325,7 @@ class ExperimentRunner:
         self
     ) -> List[Dict]:
         """
-        Return detailed experiment results.
+        Returns full results including fold metrics and parameters.
         """
 
         return self.results

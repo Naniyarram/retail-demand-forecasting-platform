@@ -1,14 +1,5 @@
 """
-data_loader.py
-
-Centralized Walmart dataset loading and validation.
-
-Used by:
-- aggregations.py
-- experiment_runner.py
-- forecasting models
-
-
+Loads and validates the Walmart forecasting datasets.
 """
 
 from pathlib import Path
@@ -20,13 +11,7 @@ from pipeline.config.settings import DATA_DIR
 
 class WalmartDataLoader:
     """
-    Loads Walmart forecasting datasets.
-
-    Files:
-        train.csv
-        stores.csv
-        features.csv
-        test.csv
+    Data loader and validator for the retail forecasting datasets.
     """
 
     REQUIRED_TRAIN_COLUMNS = {
@@ -64,7 +49,7 @@ class WalmartDataLoader:
         file_path: Path
     ) -> None:
         """
-        Ensure dataset exists.
+        Checks if the file exists at the given path.
         """
 
         if not file_path.exists():
@@ -77,7 +62,7 @@ class WalmartDataLoader:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Convert Date column to datetime.
+        Parses dates to datetime format.
         """
 
         if "Date" in df.columns:
@@ -95,7 +80,7 @@ class WalmartDataLoader:
         dataset_name: str
     ) -> None:
         """
-        Validate required columns.
+        Verifies that all required columns are present in the dataframe.
         """
 
         missing = required_columns - set(df.columns)
@@ -111,7 +96,7 @@ class WalmartDataLoader:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Remove duplicate rows.
+        Drops duplicate records.
         """
 
         return df.drop_duplicates()
@@ -208,7 +193,7 @@ class WalmartDataLoader:
         self
     ) -> dict:
         """
-        Load all Walmart datasets.
+        Loads train, features, stores, and test datasets in one go.
         """
 
         return {

@@ -1,11 +1,4 @@
-"""
-forecast_service.py
-
-Application service for loading the champion model artifact
-and generating forecasts.
-
-
-"""
+"""Service layer for model loading and demand forecasting."""
 
 from pathlib import Path
 from typing import Any
@@ -22,9 +15,7 @@ from pipeline.utils.helpers import load_json
 
 
 class ForecastService:
-    """
-    Serves forecasts from a packaged champion model.
-    """
+    """Serves forecasts from a packaged champion model."""
 
     def __init__(
         self,
@@ -41,9 +32,7 @@ class ForecastService:
         self.metadata: dict[str, Any] = {}
 
     def load_model(self) -> None:
-        """
-        Load the champion artifact into memory.
-        """
+        """Load the champion model artifact into memory."""
 
         if not self.artifact_path.exists():
 
@@ -64,16 +53,12 @@ class ForecastService:
             )
 
     def is_model_loaded(self) -> bool:
-        """
-        Return whether a model artifact is ready.
-        """
+        """Check if the model artifact has been loaded."""
 
         return self.model is not None
 
     def get_model_name(self) -> str:
-        """
-        Resolve a human-readable model name.
-        """
+        """Get a human-readable name for the loaded model."""
 
         if self.metadata.get("model_name"):
 
@@ -94,9 +79,7 @@ class ForecastService:
         return "unknown"
 
     def get_metadata(self) -> dict[str, Any]:
-        """
-        Return model serving metadata.
-        """
+        """Get metadata details of the current model and path."""
 
         return {
             "model_name": self.get_model_name(),
@@ -108,9 +91,7 @@ class ForecastService:
         self,
         forecast_horizon: int
     ) -> list[float]:
-        """
-        Generate a forecast from the loaded champion.
-        """
+        """Generate a forecast for the given horizon."""
 
         if not self.is_model_loaded():
 

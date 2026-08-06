@@ -1,8 +1,5 @@
 """
-deploy_check.py
-
-Pre-deployment validation for Streamlit Community Cloud.
-Run this from the project root before pushing.
+Pre-deployment check to verify app readiness for Streamlit Community Cloud.
 """
 
 from pathlib import Path
@@ -19,7 +16,7 @@ def main():
 
     all_ok = True
 
-    # Imports
+    # Verify imports
     print("1. Module imports")
     try:
         from pipeline.preprocessing.data_loader import WalmartDataLoader
@@ -35,14 +32,14 @@ def main():
         print(f"  [FAIL]  Import error: {e}")
         all_ok = False
 
-    # Data files
+    # Verify data files
     print("\n2. Data files")
     data_dir = Path("data")
     for fname in ["train.csv", "features.csv", "stores.csv"]:
         ok = check(fname, (data_dir / fname).exists())
         all_ok = all_ok and ok
 
-    # Artifacts
+    # Verify models and leaderboard
     print("\n3. Artifacts")
     ok = check("artifacts/models/champion_model.pkl", Path("artifacts/models/champion_model.pkl").exists())
     all_ok = all_ok and ok
@@ -51,14 +48,14 @@ def main():
     ok = check("artifacts/leaderboards/leaderboard.csv", Path("artifacts/leaderboards/leaderboard.csv").exists())
     all_ok = all_ok and ok
 
-    # Streamlit config
+    # Verify streamlit environment setup
     print("\n4. Streamlit configuration")
     ok = check(".streamlit/config.toml", Path(".streamlit/config.toml").exists())
     all_ok = all_ok and ok
     ok = check(".streamlit/secrets.toml.example", Path(".streamlit/secrets.toml.example").exists())
     all_ok = all_ok and ok
 
-    # Requirements
+    # Verify dependency setup
     print("\n5. Requirements")
     req = Path("requirements.txt").read_text()
     ok = check("streamlit in requirements.txt", "streamlit" in req)
@@ -70,7 +67,7 @@ def main():
     ok = check("fastapi NOT in requirements.txt", "fastapi" not in req)
     all_ok = all_ok and ok
 
-    # Model load test
+    # Test loading the champion model
     print("\n6. Champion model load test")
     try:
         from pipeline.api.forecast_service import ForecastService
@@ -84,7 +81,7 @@ def main():
         check(f"model load failed: {e}", False)
         all_ok = False
 
-    # Data load test
+    # Test loading the training dataset
     print("\n7. Data load test")
     try:
         from pipeline.preprocessing.data_loader import WalmartDataLoader

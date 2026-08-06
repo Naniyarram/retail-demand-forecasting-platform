@@ -1,12 +1,5 @@
 """
-run_experiments.py
-
-Main entry point for forecasting experiments.
-
-Supports:
-- Company Forecasting
-- Store Forecasting
-- Store + Department Forecasting
+Runs demand forecasting experiments at company, store, or department levels.
 """
 
 from pipeline.training.champion_pipeline import (
@@ -40,7 +33,7 @@ from pipeline.training.experiment_runner import (
 
 def create_models():
     """
-    Create forecasting models.
+    Initializes the candidate forecasting models.
     """
 
     return [
@@ -62,7 +55,7 @@ def run_company_forecast(
     train_df
 ):
     """
-    Company level forecasting.
+    Executes the training and validation workflow aggregated at the company level.
     """
 
     aggregator = WalmartAggregator()
@@ -118,7 +111,7 @@ def run_store_forecast(
     store_id=1
 ):
     """
-    Store level forecasting.
+    Executes the training and validation workflow for a specific store.
     """
 
     aggregator = WalmartAggregator()
@@ -176,7 +169,7 @@ def run_store_department_forecast(
     dept_id=1
 ):
     """
-    Store + Department forecasting.
+    Executes the training and validation workflow for a specific department within a store.
     """
 
     aggregator = WalmartAggregator()
@@ -263,7 +256,7 @@ def main():
         train_df
     )
 
-    # Uncomment as needed
+    # Toggle levels depending on target scope
 
     # run_store_forecast(
     #     train_df,

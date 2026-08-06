@@ -1,14 +1,5 @@
 """
-feature_engineering.py
-
-Feature engineering pipeline for retail demand forecasting.
-
-Creates:
-
-- Lag Features
-- Rolling Statistics
-- Calendar Features
-
+Generates lags, rolling statistics, and calendar features for forecasting.
 """
 
 import pandas as pd
@@ -21,8 +12,7 @@ from pipeline.config.settings import (
 
 class FeatureEngineer:
     """
-    Feature engineering engine for
-    machine learning forecasting models.
+    Generates features from target time series data.
     """
 
     def __init__(
@@ -40,16 +30,7 @@ class FeatureEngineer:
         lags: list[int] | None = None
     ) -> pd.DataFrame:
         """
-        Create lag features.
-
-        Example:
-            lag_1
-            lag_2
-            lag_4
-            lag_8
-            lag_12
-            lag_26
-            lag_52
+        Generates historical lag values for the target column.
         """
 
         if lags is None:
@@ -80,11 +61,7 @@ class FeatureEngineer:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Create rolling statistics.
-
-        Captures:
-            trend
-            volatility
+        Calculates rolling means and standard deviations to capture trends and volatility.
         """
 
         df = df.copy()
@@ -118,7 +95,7 @@ class FeatureEngineer:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Create calendar features.
+        Extracts temporal attributes like year, month, quarter, and week of year.
         """
 
         df = df.copy()
@@ -156,7 +133,7 @@ class FeatureEngineer:
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Master feature generation pipeline.
+        Runs the full feature engineering pipeline: sort, lag, rolling stats, calendar features, and drop NaNs.
         """
 
         df = (

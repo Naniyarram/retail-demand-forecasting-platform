@@ -1,8 +1,5 @@
 """
-retrain.py
-
-Automated retraining pipeline based on data drift checks.
-
+Defines the retraining pipeline triggered by data drift or manual override.
 """
 
 from typing import Dict, Any, List
@@ -14,7 +11,7 @@ from pipeline.training.champion_pipeline import ChampionPipeline
 
 class AutomatedRetrainer:
     """
-    Automates retraining triggers based on statistical drift detection.
+    Coordinates drift detection checks and conditional champion retraining.
     """
 
     def __init__(self, significance_level: float = 0.05):
@@ -30,9 +27,9 @@ class AutomatedRetrainer:
         force: bool = False
     ) -> Dict[str, Any]:
         """
-        Check for drift. If detected (or if forced), retrain the champion model.
+        Compares baseline and current data distribution and runs model retraining if drift is found or forced.
         """
-        # Run drift detection
+        # Check if the feature distributions have shifted.
         drift_report = self.detector.detect_drift(
             baseline_df=baseline_df,
             current_df=current_df,
@@ -54,7 +51,7 @@ class AutomatedRetrainer:
 
             print(f"[INFO] {message}")
             
-            # Run the Champion Pipeline on the updated/current dataset
+            # Run the Champion Pipeline on the updated dataset.
             pipeline_output = self.pipeline.run(
                 champion_result=champion_result,
                 full_dataset=current_df

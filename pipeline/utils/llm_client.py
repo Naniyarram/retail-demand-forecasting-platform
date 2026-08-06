@@ -1,13 +1,6 @@
 """
-llm_client.py
-
-Hugging Face LLM client for retail business insights.
-
-The client tries Hugging Face's OpenAI-compatible router first,
-then falls back to the classic text-generation inference endpoint.
-If the network, token, or model is unavailable, it returns a clear
-rule-based backup report instead of crashing the app.
-
+Hugging Face LLM client for generating retail demand insights.
+Falls back to a rule-based generator if API calls fail or timeout.
 """
 
 import os
@@ -18,11 +11,11 @@ import requests
 
 
 def _load_dotenv() -> None:
-    """Pull HF_API_TOKEN from a local .env when it is not already set."""
+    """Loads HF API token from streamlit secrets or local .env if available."""
     if os.getenv("HF_API_TOKEN") or os.getenv("HUGGINGFACEHUB_API_TOKEN"):
         return
 
-    # Try Streamlit Cloud secrets first (works when running on Streamlit Cloud)
+    # Streamlit Cloud secrets take priority
     try:
         import streamlit as st
         token = st.secrets.get("HF_API_TOKEN") or st.secrets.get("HUGGINGFACEHUB_API_TOKEN")
@@ -30,10 +23,9 @@ def _load_dotenv() -> None:
             os.environ["HF_API_TOKEN"] = token
             return
     except Exception:
-        # Not running inside Streamlit, or secrets not configured — that's fine
         pass
 
-    # Fall back to a local .env file for local development
+    # Local development fallback
     env_path = Path(__file__).resolve().parents[2] / ".env"
     if not env_path.is_file():
         return
@@ -55,7 +47,7 @@ _load_dotenv()
 
 class HFLLMClient:
     """
-    Generate retail recommendations from forecast metrics.
+    Client interface for querying Hugging Face LLMs and generating retail insights.
     """
 
     DEFAULT_MODEL = "meta-llama/Llama-3.1-8B-Instruct"
@@ -90,7 +82,7 @@ class HFLLMClient:
         forecast_data: dict[str, Any]
     ) -> dict[str, Any]:
         """
-        Generate retail analysis and inventory recommendations.
+        Creates inventory recommendations and trend analysis using forecast data.
         """
 
         prompt = self._build_prompt(
@@ -145,7 +137,7 @@ class HFLLMClient:
 
     def _model_candidates(self) -> list[str]:
         """
-        Return the selected model followed by backup models.
+        Builds a list of fallback models in priority order.
         """
 
         candidates = [
@@ -171,7 +163,7 @@ class HFLLMClient:
         prompt: str
     ) -> str:
         """
-        Generate text using Hugging Face's chat-completions router.
+        Queries HF chat completion API for the specified model.
         """
 
         payload = {
@@ -243,11 +235,7 @@ class HFLLMClient:
         temperature: float = 0.35
     ) -> str:
         """
-        Generate a general business answer using the configured HF model.
-
-        This method is used by the conversational assistant. It keeps the
-        same authentication, endpoint, and model routing behavior as the
-        recommendation report generator.
+        General-purpose text generation utility for the assistant.
         """
 
         last_error = None
@@ -306,7 +294,7 @@ class HFLLMClient:
         data: dict[str, Any]
     ) -> str:
         """
-        Build a concise prompt for retail forecasting analysis.
+        Constructs the planning/forecasting prompt for the LLM.
         """
 
         store_str = f"Store {data['store_id']}"
@@ -342,7 +330,7 @@ class HFLLMClient:
         prompt: str
     ) -> str:
         """
-        Remove prompt echo and extra whitespace from model output.
+        Cleans extra whitespace and removes echo from response.
         """
 
         clean_text = text.replace(
@@ -358,7 +346,7 @@ class HFLLMClient:
         data: dict[str, Any]
     ) -> bool:
         """
-        Validate that the response is useful business analysis.
+        Checks if the LLM output contains expected analysis sections/keywords.
         """
 
         if not text or len(text) < 180:
@@ -396,7 +384,7 @@ class HFLLMClient:
         reason: str
     ) -> str:
         """
-        Generate a deterministic backup report if HF is unavailable.
+        Generates structured backup recommendations when LLM calls fail.
         """
 
         dept_str = (

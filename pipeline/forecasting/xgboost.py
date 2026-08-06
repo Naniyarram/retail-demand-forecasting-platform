@@ -1,16 +1,5 @@
 """
-xgboost.py
-
-XGBoost forecasting model.
-
-Supports:
-- Feature Engineering
-- Walk Forward Validation
-- Experiment Runner
-- MLflow Integration
-- Model Persistence
-
-
+XGBoost forecasting model wrapper.
 """
 
 from pathlib import Path
@@ -39,7 +28,7 @@ from pipeline.preprocessing.feature_engineering import (
 
 class XGBoostForecaster(BaseForecaster):
     """
-    XGBoost forecasting model.
+    XGBoost autoregressive/recursive forecaster.
     """
 
     def __init__(
@@ -73,7 +62,7 @@ class XGBoostForecaster(BaseForecaster):
         train_df: pd.DataFrame
     ) -> None:
         """
-        Train XGBoost model.
+        Fit the XGBoost regressor using engineered features.
         """
 
         featured_df = (
@@ -121,11 +110,7 @@ class XGBoostForecaster(BaseForecaster):
         horizon: int
     ) -> np.ndarray:
         """
-        Recursive forecasting.
-
-        Predict one step at a time
-        and feed predictions back into
-        future feature generation.
+        Generate recursive multi-step forecasts by appending predictions as lags.
         """
 
         if not self.is_trained:
@@ -196,7 +181,7 @@ class XGBoostForecaster(BaseForecaster):
         path: str
     ) -> None:
         """
-        Save trained model.
+        Save model and metadata artifact package.
         """
 
         if not self.is_trained:
@@ -226,7 +211,7 @@ class XGBoostForecaster(BaseForecaster):
         path: str
     ) -> None:
         """
-        Load trained model.
+        Load model and state package.
         """
 
         package = joblib.load(path)
@@ -249,12 +234,7 @@ class XGBoostForecaster(BaseForecaster):
         self
     ) -> Dict[str, Any]:
         """
-        Return model metadata.
-
-        Useful for:
-        - MLflow
-        - Reporting
-        - Leaderboards
+        Get model hyperparameters.
         """
 
         return {

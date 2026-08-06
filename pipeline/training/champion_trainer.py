@@ -1,8 +1,5 @@
 """
-champion_trainer.py
-
-Champion model retraining.
-
+Retrains the selected champion model on the entire dataset.
 """
 
 from typing import Dict, Any
@@ -12,8 +9,7 @@ import pandas as pd
 
 class ChampionTrainer:
     """
-    Retrains the champion model
-    on the full dataset.
+    Handles retraining and summarization of the champion model.
     """
 
     def __init__(self):
@@ -25,8 +21,7 @@ class ChampionTrainer:
         full_dataset: pd.DataFrame
     ):
         """
-        Retrain champion model using
-        the entire available dataset.
+        Fits the champion model on all available historical data before production deployment.
         """
 
         model = champion_result["model_object"]
@@ -40,7 +35,7 @@ class ChampionTrainer:
         champion_result: Dict[str, Any]
     ) -> Dict[str, Any]:
         """
-        Return champion metadata.
+        Extracts evaluation metrics and parameters for model tracking.
         """
 
         summary = {
@@ -58,7 +53,7 @@ class ChampionTrainer:
         champion_result: Dict[str, Any]
     ) -> None:
         """
-        Print champion information.
+        Prints the champion model metrics to the console.
         """
 
         print("\nChampion Summary")

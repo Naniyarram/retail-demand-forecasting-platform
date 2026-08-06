@@ -1,9 +1,4 @@
-"""
-schemas.py
-
-Request and response contracts for the forecasting API.
-
-"""
+"""Request and response schemas for the FastAPI endpoints."""
 
 from typing import Any
 
@@ -20,10 +15,9 @@ from pipeline.config.settings import (
 class ForecastRequest(BaseModel):
     """
     Forecast request payload.
-
-    Store and department are optional metadata today because
-    the served champion artifact already represents one trained
-    time series scope, such as company, store, or store-department.
+    
+    store_id and department_id are optional metadata since the served 
+    champion model might already target a specific store/department scope.
     """
 
     model_config = ConfigDict(
@@ -48,9 +42,7 @@ class ForecastRequest(BaseModel):
 
 
 class ForecastResponse(BaseModel):
-    """
-    Forecast response payload.
-    """
+    """Forecast response payload."""
 
     model_config = ConfigDict(
         protected_namespaces=()
@@ -68,9 +60,7 @@ class ForecastResponse(BaseModel):
 
 
 class HealthResponse(BaseModel):
-    """
-    API liveness health response.
-    """
+    """Liveness probe response."""
     model_config = ConfigDict(
         protected_namespaces=()
     )
@@ -82,9 +72,7 @@ class HealthResponse(BaseModel):
 
 
 class ReadyResponse(BaseModel):
-    """
-    API readiness response.
-    """
+    """Readiness probe response."""
     model_config = ConfigDict(
         protected_namespaces=()
     )
@@ -96,9 +84,7 @@ class ReadyResponse(BaseModel):
 
 
 class ModelMetadataResponse(BaseModel):
-    """
-    Served model metadata.
-    """
+    """Metadata of the serving model."""
 
     model_config = ConfigDict(
         protected_namespaces=()

@@ -1,17 +1,5 @@
 """
-metrics.py
-
-Centralized evaluation metrics for forecasting models.
-
-Used by:
-- SARIMA
-- Prophet
-- XGBoost
-- Experiment Runner
-- MLflow Tracking
-- Model Monitoring
-
-
+Evaluation metrics for model validation and monitoring.
 """
 
 from typing import Dict
@@ -22,15 +10,13 @@ from sklearn.metrics import (mean_absolute_error, mean_squared_error,)
 
 class ForecastMetrics:
     """
-    Standard forecasting evaluation metrics.
+    Common forecasting metrics helper.
     """
 
     @staticmethod
     def _validate_inputs(y_true: np.ndarray, y_pred: np.ndarray) -> tuple[np.ndarray, np.ndarray]:
         """
-        Validate prediction inputs.
-
-        Returns cleaned numpy arrays.
+        Cleans and validates input arrays, stripping non-finite values.
         """
 
         y_true = np.asarray(y_true, dtype=float)
@@ -69,7 +55,7 @@ class ForecastMetrics:
 
     @staticmethod
     def rmse(y_true: np.ndarray, y_pred: np.ndarray) -> float:
-        """Root Mean Squared Error."""
+        """Calculates Root Mean Squared Error."""
 
         y_true, y_pred = ForecastMetrics._validate_inputs(y_true,y_pred)
 
@@ -81,7 +67,7 @@ class ForecastMetrics:
 
     @staticmethod
     def mae(y_true: np.ndarray,y_pred: np.ndarray) -> float:
-        """Mean Absolute Error."""
+        """Calculates Mean Absolute Error."""
 
         y_true, y_pred = ForecastMetrics._validate_inputs(y_true,y_pred)
 
@@ -89,9 +75,8 @@ class ForecastMetrics:
 
     @staticmethod
     def mape(y_true: np.ndarray,y_pred: np.ndarray) -> float:
-        """Mean Absolute Percentage Error.
-
-        Handles zero actual values safely.
+        """
+        Calculates Mean Absolute Percentage Error, ignoring zero values.
         """
 
         y_true, y_pred = ForecastMetrics._validate_inputs(y_true,y_pred )
@@ -110,7 +95,7 @@ class ForecastMetrics:
     @staticmethod
     def evaluate(y_true: np.ndarray,y_pred: np.ndarray) -> Dict[str, float]:
         """
-        Return all forecasting metrics.
+        Computes RMSE, MAE, and MAPE for the input series.
         """
 
         return {

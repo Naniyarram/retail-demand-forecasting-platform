@@ -1,9 +1,5 @@
 """
-optimization.py
-
-Inventory optimization engine for safety stock, ROP, and EOQ calculations.
-
-
+Inventory optimization formulas for safety stock, reorder points, and EOQ.
 """
 
 import math
@@ -12,8 +8,7 @@ from typing import Dict, Any
 
 def get_z_score(service_level: float) -> float:
     """
-    Get the Z-score for a given service level using a standard normal distribution lookup.
-    Supports common service levels in retail.
+    Z-score lookup for common retail service levels.
     """
     if service_level >= 0.999:
         return 3.09
@@ -38,7 +33,7 @@ def calculate_safety_stock(
     service_level: float = 0.95
 ) -> float:
     """
-    Calculate safety stock: SS = Z * std_d * sqrt(L).
+    Calculates safety stock based on demand uncertainty and lead time.
     """
     z = get_z_score(service_level)
     return round(z * demand_std * math.sqrt(lead_time_weeks), 2)
@@ -50,7 +45,7 @@ def calculate_reorder_point(
     safety_stock: float
 ) -> float:
     """
-    Calculate Reorder Point: ROP = (average_demand * lead_time_weeks) + safety_stock.
+    Calculates the reorder point (ROP) based on lead time demand and safety stock.
     """
     return round((average_demand * lead_time_weeks) + safety_stock, 2)
 
@@ -61,8 +56,7 @@ def calculate_eoq(
     setup_cost_per_order: float
 ) -> float:
     """
-    Calculate Economic Order Quantity (EOQ): EOQ = sqrt((2 * D * S) / H).
-    D is the annual demand (weekly demand * 52).
+    Calculates Economic Order Quantity (EOQ) scaling weekly demand to annual.
     """
     annual_demand = average_weekly_demand * 52
     if holding_cost_per_unit_year <= 0:
@@ -80,7 +74,7 @@ def optimize_inventory(
     setup_cost_order: float = 50.0
 ) -> Dict[str, Any]:
     """
-    Generate optimized inventory settings based on demand forecast array.
+    Computes stock, reorder, and ordering metrics for a given forecast profile.
     """
     if not forecast_demands:
         raise ValueError("Forecast demands list cannot be empty.")

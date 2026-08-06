@@ -1,10 +1,5 @@
 """
-run_api.py
-
-Simple API entry point for local demos.
-
-This starts a web server and keeps running until
-you stop it with Ctrl+C.
+API entry point for the forecasting service application.
 """
 
 import uvicorn
@@ -12,7 +7,7 @@ import uvicorn
 
 def main():
     """
-    Start the forecasting API.
+    Starts the FastAPI server locally using uvicorn.
     """
 
     print(

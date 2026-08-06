@@ -1,9 +1,5 @@
 """
-drift_detector.py
-
-Statistical data drift monitoring using Kolmogorov-Smirnov tests.
-
-
+Statistical data drift detection using Kolmogorov-Smirnov tests.
 """
 
 from typing import Dict, Any, List
@@ -13,7 +9,7 @@ from scipy.stats import ks_2samp
 
 class DataDriftDetector:
     """
-    Detects distribution drift between training baseline and incoming datasets.
+    Detector for feature distribution shifts between baseline and production datasets.
     """
 
     def __init__(self, alpha: float = 0.05):
@@ -26,7 +22,7 @@ class DataDriftDetector:
         columns: List[str]
     ) -> Dict[str, Any]:
         """
-        Run Kolmogorov-Smirnov test on selected columns to identify drift.
+        Runs two-sample KS tests on the specified columns to find significant distribution shifts.
         """
         drift_results = {}
         drift_detected = False
@@ -37,17 +33,17 @@ class DataDriftDetector:
             if col not in current_df.columns:
                 continue
 
-            # Drop missing values for clean test
+            # Drop NaNs prior to testing
             baseline_data = baseline_df[col].dropna()
             current_data = current_df[col].dropna()
 
             if len(baseline_data) == 0 or len(current_data) == 0:
                 continue
 
-            # Perform two-sample KS test
+            # Run two-sample KS test
             stat, p_val = ks_2samp(baseline_data, current_data)
             
-            # If p-value is lower than significance level, we reject null hypothesis (no drift)
+            # Reject null hypothesis of identical distributions if p-value < alpha
             col_drift = bool(p_val < self.alpha)
             if col_drift:
                 drift_detected = True

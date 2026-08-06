@@ -1,9 +1,5 @@
 """
-base_forecaster.py
-
-Abstract forecasting contract for all forecasting models.
-
-
+Base interface for all forecasting models in the pipeline.
 """
 
 from abc import ABC, abstractmethod 
@@ -16,15 +12,7 @@ from pipeline.evaluation.metrics import ForecastMetrics
 
 class BaseForecaster(ABC):
     """
-    Unified forecasting interface.
-
-    Enables:
-    - Experiment Runner
-    - Walk Forward Validation
-    - MLflow Tracking
-    - Model Registry
-    - Champion Selection
-    - Monitoring
+    Abstract base class defining the shared interface for forecasting models.
     """
 
     def __init__(self):
@@ -43,7 +31,7 @@ class BaseForecaster(ABC):
         train_df: pd.DataFrame
     ) -> None:
         """
-        Train model.
+        Fit the model to the training dataset.
         """
         pass
 
@@ -53,7 +41,7 @@ class BaseForecaster(ABC):
         horizon: int
     ):
         """
-        Generate forecast.
+        Generate forecasts for the specified horizon.
         """
         pass
 
@@ -63,7 +51,7 @@ class BaseForecaster(ABC):
         path: str
     ) -> None:
         """
-        Save trained model.
+        Save the trained model to disk.
         """
         pass
 
@@ -73,7 +61,7 @@ class BaseForecaster(ABC):
         path: str
     ) -> None:
         """
-        Load model.
+        Load a trained model from disk.
         """
         pass
 
@@ -82,11 +70,7 @@ class BaseForecaster(ABC):
         self
     ) -> Dict[str, Any]:
         """
-        Return model hyperparameters.
-
-        Required for:
-        - MLflow logging
-        - Reporting
+        Get model hyperparameters.
         """
         pass
 
@@ -96,7 +80,7 @@ class BaseForecaster(ABC):
         y_pred
     ) -> Dict[str, float]:
         """
-        Evaluate forecasts.
+        Compute evaluation metrics comparing predictions against ground truth.
         """
 
         self.metrics = ForecastMetrics.evaluate(

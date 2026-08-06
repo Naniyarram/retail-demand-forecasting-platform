@@ -1,9 +1,5 @@
 """
-helpers.py
-
-Small shared utilities used across pipeline layers.
-
-
+Shared utilities for the forecasting pipeline.
 """
 
 import json

@@ -1,15 +1,5 @@
 """
-prophet.py
-
-Prophet forecasting model.
-
-Supports:
-- Walk-forward validation
-- Experiment Runner
-- MLflow integration
-- Model persistence
-
-
+Prophet forecasting model wrapper.
 """
 
 from pathlib import Path
@@ -32,14 +22,7 @@ from pipeline.forecasting.base_forecaster import (
 
 class ProphetForecaster(BaseForecaster):
     """
-    Prophet forecasting model.
-
-    Converts:
-
-    Date -> ds
-    Weekly_Sales -> y
-
-    internally.
+    Prophet forecaster that maps custom input schemas to Prophet's expected ds/y format.
     """
 
     def __init__(
@@ -62,8 +45,7 @@ class ProphetForecaster(BaseForecaster):
         df: pd.DataFrame
     ) -> pd.DataFrame:
         """
-        Convert project schema
-        into Prophet schema.
+        Convert the input dataframe schema to Prophet columns.
         """
 
         return (
@@ -87,7 +69,7 @@ class ProphetForecaster(BaseForecaster):
         train_df: pd.DataFrame
     ) -> None:
         """
-        Train Prophet model.
+        Fit the Prophet model on training data.
         """
 
         prophet_df = self._prepare_prophet_dataframe(
@@ -114,7 +96,7 @@ class ProphetForecaster(BaseForecaster):
         horizon: int
     ):
         """
-        Forecast future periods.
+        Generate future predictions for the specified horizon.
         """
 
         if not self.is_trained:
@@ -144,7 +126,7 @@ class ProphetForecaster(BaseForecaster):
         path: str
     ) -> None:
         """
-        Save trained model.
+        Save the fitted model using joblib.
         """
 
         if not self.is_trained:
@@ -167,7 +149,7 @@ class ProphetForecaster(BaseForecaster):
         path: str
     ) -> None:
         """
-        Load trained model.
+        Load a saved model using joblib.
         """
 
         self.fitted_model = joblib.load(
@@ -182,12 +164,7 @@ class ProphetForecaster(BaseForecaster):
         self
     ) -> Dict[str, Any]:
         """
-        Return model metadata.
-
-        Used by:
-        - MLflow
-        - Reporting
-        - Leaderboards
+        Get model hyperparameters.
         """
 
         return {

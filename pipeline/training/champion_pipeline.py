@@ -1,16 +1,5 @@
 """
-champion_pipeline.py
-
-Champion lifecycle orchestration.
-
-Responsibilities
-----------------
-1. Champion Retraining
-2. Champion Summary Creation
-3. Model Logging
-4. Model URI Generation
-
-
+Orchestrates the retraining, packaging, and logging of the champion model.
 """
 
 from typing import Dict
@@ -34,7 +23,7 @@ from pipeline.training.model_packager import (
 
 class ChampionPipeline:
     """
-    End-to-end champion workflow.
+    Handles retraining the best-performing model on the full dataset and exporting it.
     """
 
     def __init__(self):
@@ -51,23 +40,10 @@ class ChampionPipeline:
         full_dataset: pd.DataFrame
     ) -> Dict[str, Any]:
         """
-        Execute champion workflow.
-
-        Steps
-        -----
-        1. Retrain champion
-        2. Generate summary
-        3. Log metadata
-        4. Generate model URI
-
-        Returns
-        -------
-        dict
+        Runs the full champion pipeline: retrains the model, saves artifacts, and logs to MLflow.
         """
 
-        # ---------------------------------
-        # Retrain Champion
-        # ---------------------------------
+        # Retrain the model on all available data.
         model_name = champion_result["model_name"]
         print(f"\n[INFO] Retraining champion model ({model_name}) on full dataset...")
 
@@ -78,9 +54,7 @@ class ChampionPipeline:
             )
         )
 
-        # ---------------------------------
-        # Generate Summary
-        # ---------------------------------
+        # Gather model parameters and evaluation metrics.
 
         champion_summary = (
             self.trainer.get_champion_summary(
@@ -88,9 +62,7 @@ class ChampionPipeline:
             )
         )
 
-        # ---------------------------------
-        # Log Metadata
-        # ---------------------------------
+        # Package and serialize the trained model artifact.
         print(f"[INFO] Saving and packaging retrained champion model...")
 
         package_result = (
@@ -103,9 +75,7 @@ class ChampionPipeline:
             )
         )
 
-        # ---------------------------------
-        # Create MLflow URI
-        # ---------------------------------
+        # Register the model run and artifact URI in MLflow.
         print(f"[INFO] Registering champion model in MLflow tracking server...")
 
         try:
@@ -188,7 +158,7 @@ class ChampionPipeline:
         pipeline_result: Dict[str, Any]
     ) -> None:
         """
-        Display pipeline results.
+        Prints a summary of the pipeline output to the console.
         """
 
         print("\n")

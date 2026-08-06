@@ -1,9 +1,5 @@
 """
-risk.py
-
-Risk classification engine for stock-out and overstock risk assessments.
-
-
+Inventory risk classifier for evaluating stock-out and overstock probability.
 """
 
 from typing import Dict, Any
@@ -16,10 +12,9 @@ def classify_risk(
     total_forecasted_demand: float
 ) -> Dict[str, Any]:
     """
-    Classifies stock-out and overstock risks based on current inventory levels,
-    safety stock, reorder point, and forecasted demand.
+    Classifies inventory levels against safety buffers and demand projections.
     """
-    # 1. Stock-out Risk
+    # Stock-out Risk
     if current_inventory < safety_stock:
         stockout_risk = "Critical"
         stockout_desc = "Current stock is below safety stock limits. Immediate reorder required."
@@ -33,7 +28,7 @@ def classify_risk(
         stockout_risk = "Low"
         stockout_desc = "Sufficient inventory buffer. Stockout risk is minimal."
 
-    # 2. Overstock Risk
+    # Overstock Risk
     maximum_recommended_level = total_forecasted_demand + safety_stock
     
     if current_inventory > maximum_recommended_level * 1.3:

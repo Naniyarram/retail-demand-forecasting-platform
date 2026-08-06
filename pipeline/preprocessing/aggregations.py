@@ -1,13 +1,6 @@
 """
-aggregations.py
-
-Forecasting aggregation layer.
-
-Supports:
-
-1. Enterprise Forecasting
-2. Store Forecasting
-3. Store + Department Forecasting
+Aggregates sales data at different levels (company, store, department)
+for forecasting.
 """
 
 from typing import Optional
@@ -19,7 +12,7 @@ from pipeline.config.settings import (DATE_COLUMN,TARGET_COLUMN)
 
 class WalmartAggregator:
     """
-    Aggregation engine for Walmart forecasting.
+    Helper class to handle data aggregation at different hierarchy levels.
     """
 
     @staticmethod
@@ -37,11 +30,7 @@ class WalmartAggregator:
     @staticmethod
     def _prepare_output(df: pd.DataFrame) -> pd.DataFrame:
         """
-        Standard forecasting format.
-
-        Returns:
-            Date
-            Weekly_Sales
+        Ensures the data is sorted by date and contains only the required columns.
         """
 
         df = (df.sort_values(DATE_COLUMN).reset_index(drop=True))
@@ -55,10 +44,7 @@ class WalmartAggregator:
 
     def get_company_sales(self,df: pd.DataFrame) -> pd.DataFrame:
         """
-        Enterprise-level sales.
-
-        Aggregate all stores
-        and departments.
+        Aggregates sales across all stores and departments to get company-wide totals.
         """
 
         self._validate_dataframe(df)
@@ -70,7 +56,7 @@ class WalmartAggregator:
 
     def get_store_sales(self,df: pd.DataFrame,store_id: int) -> pd.DataFrame:
         """
-        Store-level sales.
+        Aggregates sales for a specific store.
         """
 
         self._validate_dataframe(df)
@@ -87,7 +73,7 @@ class WalmartAggregator:
 
     def get_store_department_sales( self, df: pd.DataFrame,store_id: int,dept_id: int) -> pd.DataFrame:
         """
-        Store + Department sales.
+        Aggregates sales for a specific department within a store.
         """
 
         self._validate_dataframe(df)
@@ -114,11 +100,7 @@ class WalmartAggregator:
 
     def get_top_stores(self,df: pd.DataFrame,top_n: int = 10) -> pd.DataFrame:
         """
-        Top stores by total sales.
-
-        Useful for:
-        - experiment selection
-        - reporting
+        Identifies the highest-performing stores by overall sales volume.
         """
 
         self._validate_dataframe(df)
@@ -133,7 +115,7 @@ class WalmartAggregator:
 
     def get_top_departments(self,df: pd.DataFrame,top_n: int = 10) -> pd.DataFrame:
         """
-        Top departments by sales.
+        Identifies the highest-performing departments by overall sales volume.
         """
 
         self._validate_dataframe(df)

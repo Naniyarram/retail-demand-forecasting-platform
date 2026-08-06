@@ -1,16 +1,5 @@
 """
-forecasting_pyfunc.py
-
-Unified MLflow PyFunc wrapper for
-forecasting models.
-
-Responsibilities
-----------------
-- Wrap forecasting models
-- Standardize prediction interface
-- Enable MLflow model logging
-- Support Model Registry
-
+MLflow PyFunc wrapper to standardize the prediction interface for forecasting models.
 """
 
 from typing import Any
@@ -23,12 +12,7 @@ class ForecastingPyFuncModel(
     mlflow.pyfunc.PythonModel
 ):
     """
-    Generic forecasting wrapper.
-
-    Supports:
-    - SARIMA
-    - Prophet
-    - XGBoost
+    Wrapper for deploying models with a custom predict interface in MLflow.
     """
 
     def __init__(
@@ -45,24 +29,7 @@ class ForecastingPyFuncModel(
         model_input: pd.DataFrame
     ):
         """
-        MLflow prediction entrypoint.
-
-        Expected Input
-        --------------
-        model_input
-
-        Must contain:
-
-            horizon
-
-        Example
-        -------
-        horizon
-        12
-
-        Returns
-        -------
-        Forecast values
+        Predicts future values based on the 'horizon' parameter in the input dataframe.
         """
 
         if "horizon" not in model_input.columns:

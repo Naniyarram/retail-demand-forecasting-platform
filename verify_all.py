@@ -1,7 +1,5 @@
 """
-verify_all.py
-
-End-to-end verification of every pipeline component.
+End-to-end regression and verification suite for all pipeline components.
 """
 
 from pipeline.preprocessing.data_loader import WalmartDataLoader
@@ -17,52 +15,52 @@ import pandas as pd
 def main():
     passed = 0
 
-    # 1. LLM client
+    # LLM Client
     client = HFLLMClient()
     assert client.model_name
     print("1.  LLM client ............. PASS")
     passed += 1
 
-    # 2. Train data
+    # Training Data
     loader = WalmartDataLoader()
     train = loader.load_train_data()
     assert len(train) > 400_000
     print(f"2.  Train data ({len(train):,} rows) .. PASS")
     passed += 1
 
-    # 3. Stores
+    # Stores Metadata
     stores = loader.load_stores_data()
     assert len(stores) == 45
     print(f"3.  Stores ({len(stores)} entries) ..... PASS")
     passed += 1
 
-    # 4. Features
+    # Feature Flags/External Factors
     features = loader.load_features_data()
     assert len(features) > 5000
     print(f"4.  Features ({len(features):,} rows) .. PASS")
     passed += 1
 
-    # 5. Company aggregation
+    # Company Aggregation
     agg = WalmartAggregator()
     company = agg.get_company_sales(train)
     assert len(company) > 100
     print(f"5.  Company series ({len(company)} wks) PASS")
     passed += 1
 
-    # 6. Store aggregation
+    # Store Aggregation
     store1 = agg.get_store_sales(train, store_id=1)
     assert len(store1) > 100
     print(f"6.  Store 1 series ({len(store1)} wks) . PASS")
     passed += 1
 
-    # 7. Top stores
+    # Top Stores Revenue Ranking
     top_stores = agg.get_top_stores(train, top_n=5)
     store_ids = top_stores["Store"].tolist()
     assert len(store_ids) == 5
     print(f"7.  Top 5 stores {store_ids} ... PASS")
     passed += 1
 
-    # 8. Champion model load
+    # Model Registry/Loader
     service = ForecastService()
     service.load_model()
     model_name = service.get_model_name()
@@ -70,13 +68,13 @@ def main():
     print(f"8.  Champion model ({model_name}) .. PASS")
     passed += 1
 
-    # 9. Forecast generation
+    # Forecast Generation
     preds = service.forecast(12)
     assert len(preds) == 12
     print(f"9.  Forecast (12 weeks) ...... PASS")
     passed += 1
 
-    # 10. Drift detector
+    # Drift Detection
     detector = DataDriftDetector(alpha=0.05)
     split = int(len(company) * 0.7)
     result = detector.detect_drift(
@@ -88,7 +86,7 @@ def main():
     print(f"10. Drift detector (drift={drift_flag}) PASS")
     passed += 1
 
-    # 11. Leaderboard
+    # Leaderboard Tracking
     lb = pd.read_csv("artifacts/leaderboards/leaderboard.csv")
     champ_name = lb.iloc[0]["Model"]
     champ_mape = lb.iloc[0]["MAPE"]
@@ -96,7 +94,7 @@ def main():
     print(f"11. Leaderboard ({len(lb)} models, champ={champ_name}, MAPE={champ_mape:.2f}%) PASS")
     passed += 1
 
-    # 12. Inventory optimization
+    # Inventory Optimization
     inv = optimize_inventory([48e6, 49e6, 47e6], 3e6, 2.0, 0.95)
     assert inv["safety_stock"] > 0
     assert inv["reorder_point"] > 0
@@ -104,14 +102,14 @@ def main():
     print(f"12. Inventory optimizer (SS={inv['safety_stock']:,.0f}) PASS")
     passed += 1
 
-    # 13. Risk classification
+    # Inventory Risk Assessment
     risk = classify_risk(40e6, inv["reorder_point"], inv["safety_stock"], 144e6)
     assert risk["stockout_risk"]["level"] in ("Low", "Medium", "High", "Critical")
     assert risk["overstock_risk"]["level"] in ("Low", "Medium", "High")
     print(f"13. Risk classifier (stockout={risk['stockout_risk']['level']}) PASS")
     passed += 1
 
-    # 14. LLM insights
+    # Insights Generation
     llm_payload = {
         "store_id": 1,
         "department_id": None,

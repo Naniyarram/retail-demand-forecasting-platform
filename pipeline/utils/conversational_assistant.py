@@ -1,16 +1,6 @@
 """
-conversational_assistant.py
-
-Conversational retail analytics assistant for RetailCast.
-
-This module turns forecast, inventory, and risk metrics into natural
-language answers. It keeps the design intentionally simple:
-
-1. Detect the user's business intent.
-2. Add recent conversation history for follow-up questions.
-3. Ask the LLM for a grounded answer.
-4. Validate the answer and fall back to deterministic business logic
-   if the LLM is unavailable.
+Conversational retail analytics assistant that parses user questions and
+queries the LLM with relevant forecast, inventory, and risk metrics.
 """
 
 from __future__ import annotations
@@ -27,7 +17,7 @@ from pipeline.utils.llm_client import HFLLMClient
 
 class ConversationalRetailAssistant:
     """
-    Answer business questions about RetailCast forecast and inventory data.
+    Assistant for answering inventory and demand forecasting questions.
     """
 
     MAX_MEMORY_MESSAGES = 8
@@ -45,7 +35,7 @@ class ConversationalRetailAssistant:
         conversation_history: list[dict[str, str]] | None = None
     ) -> dict[str, Any]:
         """
-        Generate a contextual answer for a business user's question.
+        Processes and answers a business query using the current context and history.
         """
 
         clean_question = question.strip()
@@ -160,7 +150,7 @@ class ConversationalRetailAssistant:
         history: list[dict[str, str]]
     ) -> list[dict[str, str]]:
         """
-        Keep only recent user/assistant messages with plain text content.
+        Filters and truncates the conversation history.
         """
 
         cleaned = []
@@ -181,7 +171,7 @@ class ConversationalRetailAssistant:
         question: str
     ) -> str:
         """
-        Map a natural language question to a simple business intent.
+        Identifies the primary business goal of the user query.
         """
 
         q = question.lower()
@@ -208,7 +198,7 @@ class ConversationalRetailAssistant:
         history: list[dict[str, str]]
     ) -> str:
         """
-        Resolve pronouns such as "it" to the active store/department context.
+        Resolves pronouns or implied targets to the active store/dept context.
         """
 
         explicit_product = re.search(
@@ -246,7 +236,7 @@ class ConversationalRetailAssistant:
         analysis: dict[str, Any]
     ) -> str:
         """
-        Build the grounded prompt sent to the LLM.
+        Assembles the contextual prompt with metrics and business logic guidelines.
         """
 
         history_text = "\n".join(
@@ -307,7 +297,7 @@ class ConversationalRetailAssistant:
         analysis: dict[str, Any]
     ) -> str:
         """
-        Highlight calculations the LLM must copy without modification.
+        Extracts calculations that the LLM must output exactly without changing them.
         """
 
         scenario = analysis.get("scenario") or {}
@@ -347,7 +337,7 @@ class ConversationalRetailAssistant:
         analysis: dict[str, Any] | None = None
     ) -> bool:
         """
-        Validate that the LLM answer is useful and grounded enough for the demo.
+        Ensures the generated answer is grounded in factual numbers and contains required metrics.
         """
 
         if not answer or len(answer.strip()) < 80:
@@ -410,7 +400,7 @@ class ConversationalRetailAssistant:
         analysis: dict[str, Any]
     ) -> bool:
         """
-        Confirm that critical programmatic calculations appear in the answer.
+        Validates that key scenario results are explicitly mentioned in the response.
         """
 
         scenario = analysis.get("scenario") or {}
@@ -448,7 +438,7 @@ class ConversationalRetailAssistant:
         analysis: dict[str, Any]
     ) -> str:
         """
-        Return direct, deterministic answers for retrieval and calculations.
+        Computes deterministic text responses for structured retrieval queries.
         """
 
         q = question.lower()
@@ -512,7 +502,7 @@ class ConversationalRetailAssistant:
         analysis: dict[str, Any]
     ) -> bool:
         """
-        Reject answers that overstate computed confidence.
+        Checks that the output doesn't claim a higher confidence than calculated.
         """
 
         expected = str(
@@ -545,7 +535,7 @@ class ConversationalRetailAssistant:
         lower_answer: str
     ) -> bool:
         """
-        Reject answers that compare stock level directly to EOQ.
+        Ensures the model doesn't incorrectly compare inventory directly against EOQ.
         """
 
         comparison_words = (
@@ -576,7 +566,7 @@ class ConversationalRetailAssistant:
         context: dict[str, Any]
     ) -> bool:
         """
-        Reject precise inventory increases that are not grounded in context.
+        Flags any hallucinated precise numeric values in recommended actions.
         """
 
         lower_answer = answer.lower()
@@ -607,7 +597,7 @@ class ConversationalRetailAssistant:
         context: dict[str, Any]
     ) -> set[float]:
         """
-        Collect numeric facts that are allowed to appear in the answer.
+        Collects valid numeric values present in the current context.
         """
 
         values: list[Any] = [
@@ -641,7 +631,7 @@ class ConversationalRetailAssistant:
         value: str
     ) -> float | None:
         """
-        Convert a displayed number to the comparison format.
+        Converts formatted currency or number strings to float.
         """
 
         try:
@@ -663,7 +653,7 @@ class ConversationalRetailAssistant:
         subject: str
     ) -> str:
         """
-        Deterministic answer used when live LLM generation is unavailable.
+        Fallback response generator using deterministic templates when LLM fails.
         """
 
         avg_hist = float(context.get("average_historical", 0))
@@ -785,7 +775,7 @@ class ConversationalRetailAssistant:
         confidence: str
     ) -> str:
         """
-        Format deterministic assistant output for business users.
+        Formats findings into the structured five-part response.
         """
 
         return (
@@ -803,7 +793,7 @@ class ConversationalRetailAssistant:
         answer: str
     ) -> list[dict[str, str]]:
         """
-        Add the latest turn and keep only recent messages.
+        Appends a new turn to the history, enforcing maximum memory size.
         """
 
         updated = [

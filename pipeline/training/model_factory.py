@@ -1,15 +1,5 @@
 """
-model_factory.py
-
-Centralized forecasting model factory.
-
-Responsibilities
-----------------
-- Create forecasting models
-- Centralize model initialization
-- Support retraining workflows
-- Support deployment workflows
-
+Factory class to instantiate forecasting models by name.
 """
 
 from pipeline.forecasting.sarima import (
@@ -27,7 +17,7 @@ from pipeline.forecasting.xgboost import (
 
 class ModelFactory:
     """
-    Factory for forecasting models.
+    Registry and factory for all available forecasting models.
     """
 
     SUPPORTED_MODELS = {
@@ -43,15 +33,7 @@ class ModelFactory:
         **kwargs
     ):
         """
-        Create forecasting model.
-
-        Parameters
-        ----------
-        model_name : str
-
-        Returns
-        -------
-        Forecasting Model
+        Instantiates a forecaster model based on the provided name and keyword arguments.
         """
 
         if model_name not in cls.SUPPORTED_MODELS:
@@ -75,7 +57,7 @@ class ModelFactory:
         cls
     ):
         """
-        Return supported models.
+        Lists the names of all registered forecaster classes.
         """
 
         return list(

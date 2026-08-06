@@ -1,15 +1,5 @@
 """
-model_packager.py
-
-Model packaging layer.
-
-Responsibilities
-----------------
-- Serialize trained models
-- Store model artifacts
-- Return artifact paths
-
-
+Serializes, deserializes, and manages disk storage for trained model artifacts and metadata.
 """
 
 from pathlib import Path
@@ -22,7 +12,7 @@ from pipeline.utils.helpers import save_json
 
 class ModelPackager:
     """
-    Packages trained forecasting models.
+    Handles local model file persistence and reading.
     """
 
     def __init__(
@@ -45,12 +35,7 @@ class ModelPackager:
         model_object: Any
     ) -> str:
         """
-        Serialize model artifact.
-
-        Returns
-        -------
-        str
-            Artifact path
+        Saves the model instance to disk using joblib.
         """
 
         model_path = (
@@ -73,7 +58,7 @@ class ModelPackager:
         metadata: dict[str, Any] | None = None
     ) -> dict[str, str]:
         """
-        Persist the production champion artifact and metadata.
+        Saves the champion model and its metadata under a standardized production file name.
         """
 
         champion_model_path = (
@@ -122,7 +107,7 @@ class ModelPackager:
         artifact_path: str
     ) -> bool:
         """
-        Verify artifact exists.
+        Checks if the packaged model file exists on disk.
         """
 
         return Path(
@@ -134,7 +119,7 @@ class ModelPackager:
         artifact_path: str
     ):
         """
-        Load packaged model.
+        Deserializes a packaged model from disk using joblib.
         """
 
         return joblib.load(
