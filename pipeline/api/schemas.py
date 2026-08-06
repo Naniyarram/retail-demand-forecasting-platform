@@ -69,18 +69,30 @@ class ForecastResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     """
-    API health response.
+    API liveness health response.
     """
-
     model_config = ConfigDict(
         protected_namespaces=()
     )
-
     status: str
+    service: str
+    version: str
+    environment: str
+    timestamp: str
 
+
+class ReadyResponse(BaseModel):
+    """
+    API readiness response.
+    """
+    model_config = ConfigDict(
+        protected_namespaces=()
+    )
+    status: str
     model_loaded: bool
+    service: str
 
-    model_name: str | None = None
+
 
 
 class ModelMetadataResponse(BaseModel):

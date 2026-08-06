@@ -67,7 +67,43 @@ def test_health_endpoint(
     )
 
     assert response.status_code == 200
-    assert response.json()["model_loaded"] is True
+    data = response.json()
+    assert data["status"] == "healthy"
+    assert "timestamp" in data
+    assert data["service"] == "RetailCast API"
+
+
+def test_ready_endpoint(
+    monkeypatch
+):
+    service = DummyForecastService()
+    monkeypatch.setattr(
+        api_app,
+        "forecast_service",
+        service
+    )
+
+    client = TestClient(
+        api_app.app
+    )
+
+    # Test Ready (model loaded)
+    response = client.get(
+        "/ready"
+    )
+    assert response.status_code == 200
+    data = response.json()
+    assert data["status"] == "ready"
+    assert data["model_loaded"] is True
+    assert data["service"] == "RetailCast API"
+
+    # Test Not Ready (model not loaded)
+    service.loaded = False
+    response_not_ready = client.get(
+        "/ready"
+    )
+    assert response_not_ready.status_code == 503
+
 
 
 def test_forecast_endpoint(

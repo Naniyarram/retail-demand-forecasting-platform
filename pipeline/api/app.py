@@ -12,6 +12,7 @@ from contextlib import asynccontextmanager
 import time
 from typing import Dict, Any
 
+from datetime import datetime, timezone
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 
@@ -20,6 +21,7 @@ from pipeline.api.schemas import (
     ForecastRequest,
     ForecastResponse,
     HealthResponse,
+    ReadyResponse,
     ModelMetadataResponse,
     InventoryOptimizeRequest,
     InventoryOptimizeResponse,
@@ -48,6 +50,7 @@ system_metrics = {
     "total_requests": 0,
     "requests_by_endpoint": {
         "/health": 0,
+        "/ready": 0,
         "/model": 0,
         "/forecast": 0,
         "/inventory/optimize": 0,
@@ -58,6 +61,7 @@ system_metrics = {
     },
     "latencies": {
         "/health": 0.0,
+        "/ready": 0.0,
         "/model": 0.0,
         "/forecast": 0.0,
         "/inventory/optimize": 0.0,
@@ -135,17 +139,39 @@ async def add_process_time_header(request: Request, call_next):
 )
 def health_check() -> HealthResponse:
     """
-    Return API and model health.
+    Liveness probe: returns instantly to show the container is alive.
+    Does not verify heavy dependencies like model load status.
     """
     track_metric("/health")
     return HealthResponse(
-        status="ok",
-        model_loaded=forecast_service.is_model_loaded(),
-        model_name=(
-            forecast_service.get_model_name()
-            if forecast_service.is_model_loaded()
-            else None
+        status="healthy",
+        service="RetailCast API",
+        version="1.0.0",
+        environment="production",
+        timestamp=datetime.now(timezone.utc).isoformat()
+    )
+
+
+@app.get(
+    "/ready",
+    response_model=ReadyResponse
+)
+def readiness_check() -> ReadyResponse:
+    """
+    Readiness probe: checks if the forecasting model has finished loading.
+    Returns HTTP 503 if the model is not ready.
+    """
+    track_metric("/ready")
+    is_loaded = forecast_service.is_model_loaded()
+    if not is_loaded:
+        raise HTTPException(
+            status_code=503,
+            detail="Model is not loaded yet"
         )
+    return ReadyResponse(
+        status="ready",
+        model_loaded=True,
+        service="RetailCast API"
     )
 
 

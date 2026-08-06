@@ -461,15 +461,27 @@ def check_api_health():
     try:
         resp = requests.get(f"{API_BASE}/health", timeout=2)
         if resp.status_code == 200:
-            data = resp.json()
+            model_loaded = False
+            model_name = "Unknown"
+            try:
+                ready_resp = requests.get(f"{API_BASE}/ready", timeout=2)
+                if ready_resp.status_code == 200:
+                    model_loaded = True
+                    # Query metadata endpoint to fetch the loaded model name
+                    model_resp = requests.get(f"{API_BASE}/model", timeout=2)
+                    if model_resp.status_code == 200:
+                        model_name = model_resp.json().get("model_name", "Unknown")
+            except Exception:
+                pass
             return {
                 "online": True,
-                "model_loaded": data.get("model_loaded", False),
-                "model_name": data.get("model_name", "Unknown"),
+                "model_loaded": model_loaded,
+                "model_name": model_name,
             }
     except Exception:
         pass
     return {"online": False, "model_loaded": False, "model_name": None}
+
 
 
 def aggregate_series(train_df, level, store_id, dept_id):
