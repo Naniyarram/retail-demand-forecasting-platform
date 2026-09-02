@@ -1,12 +1,18 @@
 {
-  "model_name": "Prophet",
-  "model_type": "ProphetForecaster",
-  "RMSE": 3676450.9270586236,
-  "MAE": 2612769.237916548,
-  "MAPE": 5.196972259404656,
+  "model_name": "SARIMA",
+  "model_type": "SARIMAForecaster",
+  "RMSE": 2954935.7019852656,
+  "MAE": 1982233.8177018543,
+  "MAPE": 3.838314630580771,
   "parameters": {
-    "model_type": "Prophet",
-    "yearly_seasonality": true,
-    "seasonality_mode": "multiplicative"
+    "model_type": "SARIMA",
+    "seasonal_period": 52,
+    "p": 1,
+    "d": 0,
+    "q": 0,
+    "P": 0,
+    "D": 0,
+    "Q": 1,
+    "m": 52
   }
 }

@@ -38,15 +38,11 @@ def create_models():
 
     return [
 
-        SARIMAForecaster(
-            seasonal_period=12
-        ),
+        SARIMAForecaster(),
 
         ProphetForecaster(),
 
-        XGBoostForecaster(
-            n_estimators=50
-        )
+        XGBoostForecaster()
 
     ]
 
@@ -97,6 +93,11 @@ def run_company_forecast(
     print("=" * 60)
     print("COMPANY FORECASTING")
     print("=" * 60)
+
+    import os
+    os.makedirs("artifacts/leaderboards", exist_ok=True)
+    leaderboard.to_csv("artifacts/leaderboards/leaderboard.csv", index=False)
+    print("[INFO] Saved leaderboard to artifacts/leaderboards/leaderboard.csv")
 
     print(leaderboard)
 
