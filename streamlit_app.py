@@ -1,6 +1,6 @@
 """
 RetailCast dashboard for demand forecasting and inventory optimization.
-Visualizes sales, runs forecasts via the API (or local fallback), and estimates risk.
+Visualizes sales, runs forecasts via the FastAPI backend, and estimates risk.
 """
 
 import math
@@ -32,7 +32,6 @@ import streamlit as st
 
 from pipeline.preprocessing.data_loader import WalmartDataLoader
 from pipeline.preprocessing.aggregations import WalmartAggregator
-from pipeline.api.forecast_service import ForecastService
 from pipeline.inventory.optimization import optimize_inventory
 from pipeline.inventory.risk import classify_risk
 from pipeline.monitoring.drift_detector import DataDriftDetector
@@ -47,12 +46,20 @@ st.set_page_config(
     initial_sidebar_state="expanded",
 )
 
-# Resolve API URL from env or secrets, falling back to localhost
+# Resolve API URL: env var → Streamlit secret → localhost (dev only)
+_is_cloud = os.getenv("STREAMLIT_SERVER_HEADLESS") == "true"
 API_BASE = (
     os.getenv("RETAIL_API_BASE")
-    or (st.secrets.get("RETAIL_API_BASE") if "secrets" in dir(st) else None)
-    or "http://127.0.0.1:8000"
-)
+    or st.secrets.get("RETAIL_API_BASE", "")
+    or ("" if _is_cloud else "http://127.0.0.1:8000")
+).rstrip("/")
+
+if _is_cloud and not API_BASE:
+    st.error(
+        "⚠️ **Backend not configured.** "
+        "Add `RETAIL_API_BASE` to your Streamlit Cloud secrets pointing to your deployed FastAPI service. "
+        "Forecast and inventory features will not work until this is set."
+    )
 COLOR_PALETTE = {
     "primary":     "#6366f1",
     "secondary":   "#8b5cf6",
@@ -425,18 +432,20 @@ def load_champion_metadata():
 
 # Helper functions
 def check_api_health():
-    """Check backend status."""
+    """Check backend liveness then model readiness as separate probes."""
+    if not API_BASE:
+        return {"online": False, "model_loaded": False, "model_name": None}
     try:
-        resp = requests.get(f"{API_BASE}/health", timeout=2)
+        # Connect timeout 5 s, read timeout 45 s — Render free tier cold-starts
+        resp = requests.get(f"{API_BASE}/health", timeout=(5, 45))
         if resp.status_code == 200:
             model_loaded = False
             model_name = "Unknown"
             try:
-                ready_resp = requests.get(f"{API_BASE}/ready", timeout=2)
+                ready_resp = requests.get(f"{API_BASE}/ready", timeout=(5, 30))
                 if ready_resp.status_code == 200:
                     model_loaded = True
-                    # Query metadata to get loaded model name
-                    model_resp = requests.get(f"{API_BASE}/model", timeout=2)
+                    model_resp = requests.get(f"{API_BASE}/model", timeout=(5, 10))
                     if model_resp.status_code == 200:
                         model_name = model_resp.json().get("model_name", "Unknown")
             except Exception:
@@ -446,6 +455,10 @@ def check_api_health():
                 "model_loaded": model_loaded,
                 "model_name": model_name,
             }
+    except requests.exceptions.ConnectionError:
+        pass
+    except requests.exceptions.Timeout:
+        pass
     except Exception:
         pass
     return {"online": False, "model_loaded": False, "model_name": None}
@@ -849,10 +862,17 @@ with tab_forecast:
         st.error(f"No data found for the selected filters: {err}")
         st.stop()
 
-    # Retrieve forecast from API or fallback locally
+    # Retrieve forecast from the FastAPI backend
     predictions = []
     model_name = "Unknown"
     via_api = False
+
+    if not API_BASE:
+        st.error(
+            "⚠️ **No backend configured.** "
+            "Set `RETAIL_API_BASE` in Streamlit secrets to your deployed FastAPI URL."
+        )
+        st.stop()
 
     if api_status["online"] and api_status["model_loaded"]:
         try:
@@ -861,33 +881,30 @@ with tab_forecast:
                 "department_id": dept_id,
                 "forecast_horizon": horizon,
             }
-            resp = requests.post(f"{API_BASE}/forecast", json=payload, timeout=8)
-            if resp.status_code == 200:
-                body = resp.json()
-                predictions = body.get("forecast", [])
-                model_name = body.get("model_name", "Champion")
-                via_api = True
-        except Exception:
-            pass
-
-    if not via_api:
-        service = ForecastService()
-        try:
-            service.load_model()
-            predictions = service.forecast(horizon)
-            model_name = service.get_model_name()
-        except FileNotFoundError:
-            st.warning(
-                "Champion model artifact not found.  "
-                "Please run `python run_experiments.py` to train and serialize the champion model first."
-            )
-        except (ModuleNotFoundError, AttributeError) as exc:
-            st.error(
-                f"Champion model artifact is incompatible with this environment: {exc}. "
-                "Run `python run_experiments.py` to regenerate a clean artifact."
-            )
+            resp = requests.post(f"{API_BASE}/forecast", json=payload, timeout=(5, 60))
+            resp.raise_for_status()
+            body = resp.json()
+            predictions = body.get("forecast", [])
+            model_name = body.get("model_name", "Champion")
+            via_api = True
+        except requests.exceptions.Timeout:
+            st.error("⏱️ Forecast request timed out. The backend may be starting up — please try again in 30 seconds.")
+        except requests.exceptions.ConnectionError:
+            st.error(f"🔌 Cannot reach the backend at `{API_BASE}`. Verify the service is running and the URL is correct.")
+        except requests.exceptions.HTTPError as exc:
+            st.error(f"❌ Backend returned an error: {exc}")
         except Exception as exc:
-            st.error(f"Failed to load champion model: {exc}")
+            st.error(f"❌ Unexpected error during forecast: {exc}")
+    elif api_status["online"] and not api_status["model_loaded"]:
+        st.warning(
+            "🔄 **Backend is online but the champion model is not yet loaded.** "
+            "Wait a few seconds for the model to initialise and refresh the page."
+        )
+    else:
+        st.error(
+            f"🔌 **Backend offline.** Cannot connect to `{API_BASE}`. "
+            "Verify the Render service is running and `RETAIL_API_BASE` is correctly set in Streamlit secrets."
+        )
 
     if len(predictions) > 0:
         last_date = hist_df["Date"].max()
@@ -910,7 +927,7 @@ with tab_forecast:
         k1, k2, k3, k4 = st.columns(4)
         with k1:
             st.markdown(
-                build_kpi_html("Champion Model", model_name, "via API" if via_api else "local fallback",
+                build_kpi_html("Champion Model", model_name, "via API",
                                COLOR_PALETTE["primary"]),
                 unsafe_allow_html=True,
             )
@@ -1389,7 +1406,7 @@ with tab_system:
     if api_status["online"]:
         st.markdown("<div class='section-hdr'>Endpoint Usage Metrics</div>", unsafe_allow_html=True)
         try:
-            metrics_resp = requests.get(f"{API_BASE}/monitoring/metrics", timeout=3)
+            metrics_resp = requests.get(f"{API_BASE}/monitoring/metrics", timeout=(5, 10))
             if metrics_resp.status_code == 200:
                 metrics_data = metrics_resp.json()
                 em1, em2, em3 = st.columns([1.2, 2, 2.2])
